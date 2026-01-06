@@ -308,10 +308,10 @@ impl MFDecoder {
                                                 .or_else(|| cache.get(&frame_number))
                                         };
 
-                                        if let Some(frame) = frame_to_send
-                                            && let Some(s) = sender.take()
-                                        {
-                                            let _ = s.send(frame.to_decoded_frame());
+                                        if let Some(frame) = frame_to_send {
+                                            if let Some(s) = sender.take() {
+                                                let _ = s.send(frame.to_decoded_frame());
+                                            }
                                         }
                                     }
 

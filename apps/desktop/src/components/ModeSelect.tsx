@@ -2,6 +2,7 @@ import { cx } from "cva";
 import { type JSX, Show } from "solid-js";
 import { createOptionsQuery } from "~/utils/queries";
 import { commands, type RecordingMode } from "~/utils/tauri";
+import { t } from "~/components/I18nProvider";
 
 interface ModeOptionProps {
 	mode: RecordingMode;
@@ -64,20 +65,20 @@ const ModeSelect = (props: { onClose?: () => void; standalone?: boolean }) => {
 	const modeOptions = [
 		{
 			mode: "instant" as const,
-			title: "Instant",
-			description: "Share instantly with a link. Uploads as you record.",
+			title: t("recording.modeSelect.instant.title"),
+			description: t("recording.modeSelect.instant.description"),
 			icon: IconCapInstant,
 		},
 		{
 			mode: "studio" as const,
-			title: "Studio",
-			description: "Highest quality local recording for editing later.",
+			title: t("recording.modeSelect.studio.title"),
+			description: t("recording.modeSelect.studio.description"),
 			icon: IconCapFilmCut,
 		},
 		{
 			mode: "screenshot" as const,
-			title: "Screenshot",
-			description: "Capture and annotate screenshots instantly.",
+			title: t("recording.modeSelect.screenshot.title"),
+			description: t("recording.modeSelect.screenshot.description"),
 			icon: IconCapScreenshot,
 		},
 	];

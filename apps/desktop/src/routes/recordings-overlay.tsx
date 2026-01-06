@@ -33,6 +33,7 @@ import {
 	type UploadProgress,
 	type UploadResult,
 } from "~/utils/tauri";
+import { t } from "~/components/I18nProvider";
 import IconCapEditor from "~icons/cap/editor";
 import IconCapUpload from "~icons/cap/upload";
 import IconLucideClock from "~icons/lucide/clock";
@@ -206,10 +207,10 @@ export default function () {
 															<ActionProgressOverlay
 																title={
 																	state.type === "rendering"
-																		? "Rendering video"
+																		? t('recordingsPage.status.renderingVideo')
 																		: state.type === "copying"
-																			? "Copying to clipboard"
-																			: "Copied to clipboard"
+																			? t('recordingsPage.status.copyingToClipboard')
+																			: t('recordingsPage.status.copiedToClipboard')
 																}
 																progressPercentage={actionProgressPercentage(
 																	actionState,
@@ -227,20 +228,20 @@ export default function () {
 															<ActionProgressOverlay
 																title={(() => {
 																	if (state.type === "choosing-location")
-																		return "Preparing";
+																		return t('recordingsPage.status.choosingLocation');
 
 																	if (isRecording) {
 																		if (state.type === "rendering")
-																			return "Rendering video";
+																			return t('recordingsPage.status.renderingVideo');
 																		if (state.type === "saving")
-																			return "Saving video";
-																		return "Saved video";
+																			return t('recordingsPage.status.savingVideo');
+																		return t('recordingsPage.status.savedVideo');
 																	} else {
 																		if (state.type === "rendering")
-																			return "Rendering image";
+																			return t('recordingsPage.status.renderingImage');
 																		if (state.type === "saving")
-																			return "Saving image";
-																		return "Saved image";
+																			return t('recordingsPage.status.savingImage');
+																		return t('recordingsPage.status.savedImage');
 																	}
 																})()}
 																progressPercentage={actionProgressPercentage(
@@ -248,9 +249,9 @@ export default function () {
 																)}
 																progressMessage={
 																	state.type === "choosing-location" &&
-																	`Choose where to ${
-																		isRecording ? "export video" : "save image"
-																	}...`
+																	t('recordingsPage.status.choosingLocation', {
+																		type: isRecording ? t('targetSelect.actions.exportVideo') : t('targetSelect.actions.saveImage')
+																	})
 																}
 															/>
 														)}
@@ -265,10 +266,10 @@ export default function () {
 															<ActionProgressOverlay
 																title={
 																	state.type === "rendering"
-																		? "Rendering video"
+																		? t('recordingsPage.status.renderingVideo')
 																		: state.type === "uploading"
-																			? "Creating shareable link"
-																			: "Shareable link copied"
+																			? t('recordingsPage.status.creatingLink')
+																			: t('recordingsPage.status.linkCopied')
 																}
 																progressPercentage={actionProgressPercentage(
 																	actionState,
@@ -292,7 +293,7 @@ export default function () {
 												>
 													<TooltipIconButton
 														class="absolute top-3 left-3 z-20"
-														tooltipText="Close"
+														tooltipText={t('recordingsPage.actions.close')}
 														tooltipPlacement="right"
 														onClick={() => {
 															const setMedia = isRecording
@@ -315,7 +316,7 @@ export default function () {
 													{isRecording ? (
 														<TooltipIconButton
 															class="absolute bottom-3 left-3 z-20"
-															tooltipText="Edit"
+															tooltipText={t('recordingsPage.actions.edit')}
 															tooltipPlacement="right"
 															onClick={() => {
 																const setMedia = isRecording
@@ -341,7 +342,7 @@ export default function () {
 													) : (
 														<TooltipIconButton
 															class="absolute bottom-3 left-3 z-20"
-															tooltipText="View"
+															tooltipText={t('recordingsPage.actions.view')}
 															tooltipPlacement="right"
 															onClick={() => {
 																commands.openFilePath(media.path);
@@ -354,8 +355,8 @@ export default function () {
 														class="absolute top-3 right-3 z-20"
 														tooltipText={
 															copy.isPending
-																? "Copying to Clipboard"
-																: "Copy to Clipboard"
+																? t('recordingsPage.actions.copyingToClipboard')
+																: t('recordingsPage.actions.copyToClipboard')
 														}
 														tooltipPlacement="left"
 														onClick={() => copy.mutate()}
@@ -366,8 +367,8 @@ export default function () {
 														class="absolute right-3 bottom-3 z-[998]"
 														tooltipText={
 															recordingMeta.data?.sharing
-																? "Copy Shareable Link"
-																: "Create Shareable Link"
+																? t('recordingsPage.actions.copyLink')
+																: t('recordingsPage.actions.createLink')
 														}
 														tooltipPlacement="left"
 														onClick={() => upload.mutate()}
@@ -380,7 +381,7 @@ export default function () {
 															size="sm"
 															onClick={() => save.mutate()}
 														>
-															Export
+															{t('recordingsPage.actions.export')}
 														</Button>
 													</div>
 												</div>
@@ -640,7 +641,7 @@ function createRecordingMutations(
 			}
 
 			const defaultName = isRecording
-				? "Cap Recording"
+				? t("recording.defaultName")
 				: media.path.split(".cap/")[1];
 			const suggestedName = meta.pretty_name || defaultName;
 
@@ -711,7 +712,7 @@ function createRecordingMutations(
 			// Check authentication first
 			const existingAuth = await authStore.get();
 			if (!existingAuth) {
-				throw new Error("You need to sign in to share recordings");
+				throw new Error(t('recordingOverlay.errors.signInToShare'));
 			}
 
 			const metadata = await commands.getVideoMetadata(media.path);
@@ -725,7 +726,7 @@ function createRecordingMutations(
 				if (canShare.reason === "upgrade_required") {
 					await commands.showWindow("Upgrade");
 					throw new Error(
-						"Upgrade required to share recordings longer than 5 minutes",
+						t('recordingOverlay.errors.upgradeRequired'),
 					);
 				}
 			}
@@ -820,31 +821,31 @@ function createRecordingMutations(
 type ActionState =
 	| { type: "idle" }
 	| {
-			type: "copy";
-			state:
-				| { type: "rendering"; state: RenderState }
-				| { type: "copying" }
-				| { type: "copied" };
-	  }
+		type: "copy";
+		state:
+		| { type: "rendering"; state: RenderState }
+		| { type: "copying" }
+		| { type: "copied" };
+	}
 	| {
-			type: "save";
-			state:
-				| { type: "choosing-location"; mediaType: "video" | "screenshot" }
-				| { type: "rendering"; state: RenderState }
-				| { type: "saving" }
-				| { type: "saved" };
-	  }
+		type: "save";
+		state:
+		| { type: "choosing-location"; mediaType: "video" | "screenshot" }
+		| { type: "rendering"; state: RenderState }
+		| { type: "saving" }
+		| { type: "saved" };
+	}
 	| {
-			type: "upload";
-			state:
-				| { type: "rendering"; state: RenderState }
-				| {
-						type: "uploading";
-						// 0-100
-						progress: number;
-				  }
-				| { type: "link-copied" };
-	  };
+		type: "upload";
+		state:
+		| { type: "rendering"; state: RenderState }
+		| {
+			type: "uploading";
+			// 0-100
+			progress: number;
+		}
+		| { type: "link-copied" };
+	};
 
 function createRenderProgressCallback(
 	actionType: Exclude<ActionState["type"], "idle">,
@@ -901,8 +902,8 @@ function actionProgressPercentage(state: ActionState): number {
 
 type RenderState =
 	| {
-			type: "rendering";
-			renderedFrames: number;
-			totalFrames: number;
-	  }
+		type: "rendering";
+		renderedFrames: number;
+		totalFrames: number;
+	}
 	| { type: "starting" };

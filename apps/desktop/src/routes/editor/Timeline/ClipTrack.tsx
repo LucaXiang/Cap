@@ -399,7 +399,7 @@ export function ClipTrack(
 
 					const segmentRecording = (s = i()) =>
 						editorInstance.recordings.segments[
-							segments()[s].recordingSegment ?? 0
+						segments()[s].recordingSegment ?? 0
 						];
 
 					const marker = useSectionMarker(() => ({
@@ -433,7 +433,7 @@ export function ClipTrack(
 							return;
 
 						const idx = segment().recordingSegment ?? i();
-						return micWaveforms()?.[idx] ?? [];
+						return micWaveforms.latest?.[idx] ?? [];
 					};
 
 					const systemAudioWaveform = () => {
@@ -444,7 +444,7 @@ export function ClipTrack(
 							return;
 
 						const idx = segment().recordingSegment ?? i();
-						return systemAudioWaveforms()?.[idx] ?? [];
+						return systemAudioWaveforms.latest?.[idx] ?? [];
 					};
 
 					return (
@@ -689,8 +689,8 @@ export function ClipTrack(
 											const newStart =
 												initialStart +
 												(event.clientX - downEvent.clientX) *
-													secsPerPixel() *
-													seg.timescale;
+												secsPerPixel() *
+												seg.timescale;
 
 											const clampedStart = Math.min(
 												Math.max(

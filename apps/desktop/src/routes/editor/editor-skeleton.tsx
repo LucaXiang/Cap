@@ -81,14 +81,19 @@ function PlayerToolbarSkeleton() {
 	);
 }
 
+import { t } from "~/components/I18nProvider";
+
 function VideoPreviewSkeleton() {
 	return (
 		<div class="relative flex-1 flex justify-center items-center">
 			<div class="relative w-full h-full flex justify-center items-center p-4">
-				<div class="relative bg-gray-3 dark:bg-gray-4 rounded-lg w-full max-w-[85%] aspect-video flex items-center justify-center">
+				<div class="relative bg-gray-3 dark:bg-gray-4 rounded-lg w-full max-w-[85%] aspect-video flex flex-col gap-4 items-center justify-center">
 					<div class="animate-spin grayscale opacity-60">
 						<IconCapLogo class="size-[4rem] text-gray-6" />
 					</div>
+					<p class="text-gray-11 font-medium text-sm animate-pulse">
+						{t("editor.initializing")}
+					</p>
 				</div>
 			</div>
 		</div>

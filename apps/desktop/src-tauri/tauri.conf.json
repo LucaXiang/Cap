@@ -1,8 +1,8 @@
 {
 	"$schema": "https://schema.tauri.app/config/2",
-	"productName": "Cap - Development",
-	"identifier": "so.cap.desktop.dev",
-	"mainBinaryName": "Cap - Development",
+	"productName": "Cap 中文版",
+	"identifier": "so.cap.desktop.cn",
+	"mainBinaryName": "Cap-CN",
 	"build": {
 		"beforeDevCommand": "pnpm localdev",
 		"devUrl": "http://localhost:3002",
@@ -71,12 +71,15 @@
 			"nsis": {
 				"headerImage": "assets/nsis-header.bmp",
 				"sidebarImage": "assets/nsis-sidebar.bmp",
-				"installerIcon": "icons/icon.ico"
+				"installerIcon": "icons/icon.ico",
+				"languages": ["SimpChinese"],
+				"displayLanguageSelector": false
 			},
 			"wix": {
 				"upgradeCode": "79f4309d-ca23-54df-b6f9-826a1d783676",
 				"bannerPath": "assets/wix-banner.bmp",
-				"dialogImagePath": "assets/wix-dialog.bmp"
+				"dialogImagePath": "assets/wix-dialog.bmp",
+				"language": "zh-CN"
 			}
 		},
 		"fileAssociations": [

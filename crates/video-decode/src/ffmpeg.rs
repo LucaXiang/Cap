@@ -102,11 +102,10 @@ fn query_d3d11_video_decoder_capabilities() -> HwDecoderCapabilities {
                     OutputFormat: DXGI_FORMAT_NV12,
                 };
 
-                if let Ok(config_count) =
-                    unsafe { video_device.GetVideoDecoderConfigCount(&desc_4k) }
-                    && config_count > 0
-                {
-                    supports_hw = true;
+                if let Ok(config_count) = unsafe { video_device.GetVideoDecoderConfigCount(&desc_4k) } {
+                    if config_count > 0 {
+                        supports_hw = true;
+                    }
                 }
             }
         }

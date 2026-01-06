@@ -1,5 +1,6 @@
 use crate::{AppSounds, general_settings::GeneralSettingsStore};
 use tauri_plugin_notification::NotificationExt;
+use tauri_specta::Event;
 
 #[allow(unused)]
 pub enum NotificationType {
@@ -19,47 +20,59 @@ pub enum NotificationType {
 impl NotificationType {
     fn details(&self) -> (&'static str, &'static str, bool) {
         match self {
-            NotificationType::VideoSaved => ("Video Saved", "Video saved successfully", false),
-            NotificationType::VideoCopiedToClipboard => {
-                ("Video Copied", "Video copied to clipboard", false)
-            }
-            NotificationType::ShareableLinkCopied => {
-                ("Link Copied", "Link copied to clipboard", false)
-            }
+            NotificationType::VideoSaved => (
+                "notifications.videoSaved.title",
+                "notifications.videoSaved.body",
+                false,
+            ),
+            NotificationType::VideoCopiedToClipboard => (
+                "notifications.videoCopied.title",
+                "notifications.videoCopied.body",
+                false,
+            ),
+            NotificationType::ShareableLinkCopied => (
+                "notifications.linkCopied.title",
+                "notifications.linkCopied.body",
+                false,
+            ),
             NotificationType::UploadFailed => (
-                "Upload Failed",
-                "Unable to upload media. Please try again",
+                "notifications.uploadFailed.title",
+                "notifications.uploadFailed.body",
                 true,
             ),
             NotificationType::VideoSaveFailed => (
-                "Save Failed",
-                "Unable to save video. Please try again",
+                "notifications.videoSaveFailed.title",
+                "notifications.videoSaveFailed.body",
                 true,
             ),
             NotificationType::VideoCopyFailed => (
-                "Copy Failed",
-                "Unable to copy video to clipboard. Please try again",
+                "notifications.videoCopyFailed.title",
+                "notifications.videoCopyFailed.body",
                 true,
             ),
             NotificationType::ShareableLinkFailed => (
-                "Share Failed",
-                "Unable to create shareable link. Please try again",
+                "notifications.shareFailed.title",
+                "notifications.shareFailed.body",
                 true,
             ),
-            NotificationType::ScreenshotSaved => {
-                ("Screenshot Saved", "Screenshot saved successfully", false)
-            }
-            NotificationType::ScreenshotCopiedToClipboard => {
-                ("Screenshot Copied", "Screenshot copied to clipboard", false)
-            }
+            NotificationType::ScreenshotSaved => (
+                "notifications.screenshotSaved.title",
+                "notifications.screenshotSaved.body",
+                false,
+            ),
+            NotificationType::ScreenshotCopiedToClipboard => (
+                "notifications.screenshotCopied.title",
+                "notifications.screenshotCopied.body",
+                false,
+            ),
             NotificationType::ScreenshotSaveFailed => (
-                "Save Failed",
-                "Unable to save screenshot. Please try again",
+                "notifications.screenshotSaveFailed.title",
+                "notifications.screenshotSaveFailed.body",
                 true,
             ),
             NotificationType::ScreenshotCopyFailed => (
-                "Copy Failed",
-                "Unable to copy screenshot to clipboard. Please try again",
+                "notifications.screenshotCopyFailed.title",
+                "notifications.screenshotCopyFailed.body",
                 true,
             ),
         }
@@ -98,7 +111,7 @@ pub fn send_notification(app: &tauri::AppHandle, notification_type: Notification
         return;
     }
 
-    let (title, body, _is_error) = notification_type.details();
+    let (title, body, is_error) = notification_type.details();
 
     app.notification()
         .builder()
@@ -106,6 +119,13 @@ pub fn send_notification(app: &tauri::AppHandle, notification_type: Notification
         .body(body)
         .show()
         .ok();
+
+    let _ = crate::NewNotification {
+        title: title.to_string(),
+        body: body.to_string(),
+        is_error,
+    }
+    .emit(app);
 
     AppSounds::Notification.play();
 }

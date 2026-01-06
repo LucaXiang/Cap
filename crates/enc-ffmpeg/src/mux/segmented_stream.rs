@@ -36,24 +36,25 @@ fn atomic_write_json<T: Serialize>(path: &Path, data: &T) -> std::io::Result<()>
 
     std::fs::rename(&temp_path, path)?;
 
-    if let Some(parent) = path.parent()
-        && let Ok(dir) = std::fs::File::open(parent)
-        && let Err(e) = dir.sync_all()
-    {
-        tracing::warn!(
-            "Directory fsync failed after rename for {}: {e}",
-            parent.display()
-        );
+    if let Some(parent) = path.parent() {
+        if let Ok(dir) = std::fs::File::open(parent) {
+            if let Err(e) = dir.sync_all() {
+                tracing::warn!(
+                    "Directory fsync failed after rename for {}: {e}",
+                    parent.display()
+                );
+            }
+        }
     }
 
     Ok(())
 }
 
 fn sync_file(path: &Path) {
-    if let Ok(file) = std::fs::File::open(path)
-        && let Err(e) = file.sync_all()
-    {
-        tracing::warn!("File fsync failed for {}: {e}", path.display());
+    if let Ok(file) = std::fs::File::open(path) {
+        if let Err(e) = file.sync_all() {
+            tracing::warn!("File fsync failed for {}: {e}", path.display());
+        }
     }
 }
 
@@ -439,34 +440,37 @@ impl SegmentedVideoEncoder {
 
         for entry in entries.flatten() {
             let path = entry.path();
-            if let Some(name) = path.file_name().and_then(|n| n.to_str())
-                && name.starts_with("segment_")
-                && name.ends_with(".m4s.tmp")
-                && let Ok(metadata) = std::fs::metadata(&path)
-                && metadata.len() > 0
-            {
-                let final_name = name.trim_end_matches(".tmp");
-                let final_path = self.base_path.join(final_name);
-                let file_size = metadata.len();
+            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                if name.starts_with("segment_")
+                    && name.ends_with(".m4s.tmp")
+                {
+                    if let Ok(metadata) = std::fs::metadata(&path) {
+                        if metadata.len() > 0 {
+                            let final_name = name.trim_end_matches(".tmp");
+                            let final_path = self.base_path.join(final_name);
+                            let file_size = metadata.len();
 
-                let rename_result = Self::rename_with_retry(&path, &final_path);
+                            let rename_result = Self::rename_with_retry(&path, &final_path);
 
-                match rename_result {
-                    Ok(()) => {
-                        tracing::debug!(
-                            "Finalized pending segment: {} ({} bytes)",
-                            final_path.display(),
-                            file_size
-                        );
-                        sync_file(&final_path);
-                    }
-                    Err(e) => {
-                        tracing::warn!(
-                            "Failed to rename tmp segment {} to {}: {}",
-                            path.display(),
-                            final_path.display(),
-                            e
-                        );
+                            match rename_result {
+                                Ok(()) => {
+                                    tracing::debug!(
+                                        "Finalized pending segment: {} ({} bytes)",
+                                        final_path.display(),
+                                        file_size
+                                    );
+                                    sync_file(&final_path);
+                                }
+                                Err(e) => {
+                                    tracing::warn!(
+                                        "Failed to rename tmp segment {} to {}: {}",
+                                        path.display(),
+                                        final_path.display(),
+                                        e
+                                    );
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -527,17 +531,22 @@ impl SegmentedVideoEncoder {
 
         for entry in entries.flatten() {
             let path = entry.path();
-            if let Some(name) = path.file_name().and_then(|n| n.to_str())
-                && name.starts_with("segment_")
-                && name.ends_with(".m4s")
-                && !name.contains(".tmp")
-                && let Some(index_str) = name
-                    .strip_prefix("segment_")
-                    .and_then(|s| s.strip_suffix(".m4s"))
-                && let Ok(index) = index_str.parse::<u32>()
-                && !completed_indices.contains(&index)
-            {
-                orphaned.push((index, path));
+            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                if name.starts_with("segment_")
+                    && name.ends_with(".m4s")
+                    && !name.contains(".tmp")
+                {
+                    if let Some(index_str) = name
+                        .strip_prefix("segment_")
+                        .and_then(|s| s.strip_suffix(".m4s"))
+                    {
+                        if let Ok(index) = index_str.parse::<u32>() {
+                            if !completed_indices.contains(&index) {
+                                orphaned.push((index, path));
+                            }
+                        }
+                    }
+                }
             }
         }
 

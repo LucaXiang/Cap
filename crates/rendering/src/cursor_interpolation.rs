@@ -72,9 +72,10 @@ impl<'a> CursorSpringContext<'a> {
     }
 
     fn advance_to(&mut self, time_ms: f64) {
-        while let Some(click) = self.clicks.get(self.next_click_index)
-            && click.time_ms <= time_ms
-        {
+        while let Some(click) = self.clicks.get(self.next_click_index) {
+            if click.time_ms > time_ms {
+                break;
+            }
             self.last_click_time = Some(click.time_ms);
             if click.cursor_num == 0 {
                 self.primary_button_down = click.down;
@@ -132,17 +133,17 @@ pub fn interpolate_cursor(
         });
     }
 
-    if let Some(event) = cursor.moves.last()
-        && event.time_ms <= time_ms
-    {
-        return Some(InterpolatedCursorPosition {
-            position: Coord::new(XY {
-                x: event.x,
-                y: event.y,
-            }),
-            velocity: XY::new(0.0, 0.0),
-            cursor_id: event.cursor_id.clone(),
-        });
+    if let Some(event) = cursor.moves.last() {
+        if event.time_ms <= time_ms {
+            return Some(InterpolatedCursorPosition {
+                position: Coord::new(XY {
+                    x: event.x,
+                    y: event.y,
+                }),
+                velocity: XY::new(0.0, 0.0),
+                cursor_id: event.cursor_id.clone(),
+            });
+        }
     }
 
     if let Some(smoothing_config) = smoothing {

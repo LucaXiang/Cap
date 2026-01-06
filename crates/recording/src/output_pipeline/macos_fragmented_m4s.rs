@@ -166,10 +166,10 @@ impl Muxer for MacOSFragmentedM4SMuxer {
     }
 
     fn stop(&mut self) {
-        if let Some(state) = &self.state
-            && let Err(e) = state.video_tx.send(None)
-        {
-            trace!("M4S encoder channel already closed during stop: {e}");
+        if let Some(state) = &self.state {
+            if let Err(e) = state.video_tx.send(None) {
+                trace!("M4S encoder channel already closed during stop: {e}");
+            }
         }
     }
 
@@ -660,10 +660,10 @@ impl Muxer for MacOSFragmentedM4SCameraMuxer {
     }
 
     fn stop(&mut self) {
-        if let Some(state) = &self.state
-            && let Err(e) = state.video_tx.send(None)
-        {
-            trace!("M4S camera encoder channel already closed during stop: {e}");
+        if let Some(state) = &self.state {
+            if let Err(e) = state.video_tx.send(None) {
+                trace!("M4S camera encoder channel already closed during stop: {e}");
+            }
         }
     }
 

@@ -21,6 +21,7 @@ import { BorderPopover } from "./popovers/BorderPopover";
 import { PaddingPopover } from "./popovers/PaddingPopover";
 import { RoundingPopover } from "./popovers/RoundingPopover";
 import { ShadowPopover } from "./popovers/ShadowPopover";
+import { t } from "~/components/I18nProvider";
 
 import {
 	DropdownItem,
@@ -113,7 +114,7 @@ export function Header() {
 			<div class="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
 				<AspectRatioSelect />
 				<EditorButton
-					tooltipText="Crop Image"
+					tooltipText={t("screenshotEditor.header.crop")}
 					onClick={cropDialogHandler}
 					disabled={isCropDisabled()}
 					leftIcon={<IconCapCrop class="size-4" />}
@@ -142,13 +143,13 @@ export function Header() {
 					onClick={() => {
 						exportImage("clipboard");
 					}}
-					tooltipText="Copy to Clipboard"
+					tooltipText={t("screenshotEditor.header.copy")}
 					disabled={isExporting()}
 					leftIcon={<IconLucideCopy class="w-4" />}
 				/>
 
 				<EditorButton
-					tooltipText="Save"
+					tooltipText={t("screenshotEditor.header.save")}
 					onClick={() => exportImage("file")}
 					disabled={isExporting()}
 					leftIcon={<IconLucideSave class="size-4" />}
@@ -157,7 +158,7 @@ export function Header() {
 				<DropdownMenu gutter={8} placement="bottom-end">
 					<EditorButton<typeof DropdownMenu.Trigger>
 						as={DropdownMenu.Trigger}
-						tooltipText="More Actions"
+						tooltipText={t("screenshotEditor.header.moreActions")}
 						leftIcon={<IconLucideMoreHorizontal class="size-4" />}
 					/>
 					<DropdownMenu.Portal>
@@ -176,13 +177,13 @@ export function Header() {
 										}}
 									>
 										<IconLucideFolder class="size-4 text-gray-11" />
-										<span>Open Folder</span>
+										<span>{t("screenshotEditor.header.openFolder")}</span>
 									</DropdownItem>
 									<DropdownItem
 										onSelect={async () => {
 											if (
 												await ask(
-													"Are you sure you want to delete this screenshot?",
+													t("screenshotEditor.header.confirmDelete"),
 												)
 											) {
 												await remove(path());
@@ -191,7 +192,7 @@ export function Header() {
 										}}
 									>
 										<IconCapTrash class="size-4 text-gray-11" />
-										<span>Delete</span>
+										<span>{t("screenshotEditor.header.delete")}</span>
 									</DropdownItem>
 								</MenuItemList>
 							</PopperContent>

@@ -197,7 +197,8 @@ impl CameraLayer {
 
                     if let (Some(y_data), Some(uv_data)) =
                         (camera_frame.y_plane(), camera_frame.uv_plane())
-                        && self
+                    {
+                        if self
                             .yuv_converter
                             .convert_nv12(
                                 device,
@@ -210,8 +211,9 @@ impl CameraLayer {
                                 camera_frame.uv_stride(),
                             )
                             .is_ok()
-                    {
-                        self.copy_from_yuv_output(device, queue, next_texture, frame_size);
+                        {
+                            self.copy_from_yuv_output(device, queue, next_texture, frame_size);
+                        }
                     }
                 }
                 PixelFormat::Yuv420p => {
@@ -228,22 +230,24 @@ impl CameraLayer {
                         camera_frame.y_plane(),
                         camera_frame.u_plane(),
                         camera_frame.v_plane(),
-                    ) && self
-                        .yuv_converter
-                        .convert_yuv420p(
-                            device,
-                            queue,
-                            y_data,
-                            u_data,
-                            v_data,
-                            frame_size.x,
-                            frame_size.y,
-                            camera_frame.y_stride(),
-                            camera_frame.uv_stride(),
-                        )
-                        .is_ok()
-                    {
-                        self.copy_from_yuv_output(device, queue, next_texture, frame_size);
+                    ) {
+                        if self
+                            .yuv_converter
+                            .convert_yuv420p(
+                                device,
+                                queue,
+                                y_data,
+                                u_data,
+                                v_data,
+                                frame_size.x,
+                                frame_size.y,
+                                camera_frame.y_stride(),
+                                camera_frame.uv_stride(),
+                            )
+                            .is_ok()
+                        {
+                            self.copy_from_yuv_output(device, queue, next_texture, frame_size);
+                        }
                     }
                 }
             }
@@ -292,12 +296,12 @@ impl CameraLayer {
     pub fn copy_to_texture(&mut self, _encoder: &mut wgpu::CommandEncoder) {}
 
     pub fn render(&self, pass: &mut wgpu::RenderPass<'_>) {
-        if !self.hidden
-            && let Some(bind_group) = &self.bind_groups[self.current_texture]
-        {
-            pass.set_pipeline(&self.pipeline.render_pipeline);
-            pass.set_bind_group(0, bind_group, &[]);
-            pass.draw(0..3, 0..1);
+        if !self.hidden {
+            if let Some(bind_group) = &self.bind_groups[self.current_texture] {
+                pass.set_pipeline(&self.pipeline.render_pipeline);
+                pass.set_bind_group(0, bind_group, &[]);
+                pass.draw(0..3, 0..1);
+            }
         }
     }
 }

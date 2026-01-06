@@ -268,10 +268,10 @@ fn nv12_convert_sequential(
     progress: Option<Arc<ConversionProgress>>,
 ) {
     for row in 0..height {
-        if let Some(ref p) = progress
-            && p.is_cancelled()
-        {
-            return;
+        if let Some(ref p) = progress {
+            if p.is_cancelled() {
+                return;
+            }
         }
 
         nv12_convert_row(
@@ -311,10 +311,10 @@ fn nv12_convert_parallel(
             let band_height = band_output.len() / row_bytes;
 
             for local_row in 0..band_height {
-                if let Some(ref p) = progress
-                    && p.is_cancelled()
-                {
-                    return;
+                if let Some(ref p) = progress {
+                    if p.is_cancelled() {
+                        return;
+                    }
                 }
 
                 let global_row = start_row + local_row;
@@ -635,10 +635,10 @@ fn yuv420p_convert_sequential(
     progress: Option<Arc<ConversionProgress>>,
 ) {
     for row in 0..height {
-        if let Some(ref p) = progress
-            && p.is_cancelled()
-        {
-            return;
+        if let Some(ref p) = progress {
+            if p.is_cancelled() {
+                return;
+            }
         }
 
         yuv420p_convert_row(
@@ -679,10 +679,10 @@ fn yuv420p_convert_parallel(
             let band_height = band_output.len() / row_bytes;
 
             for local_row in 0..band_height {
-                if let Some(ref p) = progress
-                    && p.is_cancelled()
-                {
-                    return;
+                if let Some(ref p) = progress {
+                    if p.is_cancelled() {
+                        return;
+                    }
                 }
 
                 let global_row = start_row + local_row;
@@ -1123,9 +1123,9 @@ mod tests {
         let y_stride = 1920u32;
         let uv_stride = 1920u32;
 
-        let y_data: Vec<u8> = (0..y_stride * height).map(|i| ((i % 256) as u8)).collect();
+        let y_data: Vec<u8> = (0..y_stride * height).map(|i| (i % 256) as u8).collect();
         let uv_data: Vec<u8> = (0..uv_stride * height / 2)
-            .map(|i| (((i + 64) % 256) as u8))
+            .map(|i| ((i + 64) % 256) as u8)
             .collect();
 
         let mut output = vec![0u8; (width * height * 4) as usize];

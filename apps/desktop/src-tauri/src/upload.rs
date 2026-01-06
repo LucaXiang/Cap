@@ -250,10 +250,10 @@ pub async fn create_or_get_video(
             .as_ref()
             .ok()
             .and_then(|body| serde_json::from_str::<CreateErrorResponse>(body).ok())
-            && status == StatusCode::FORBIDDEN
-            && error.error == "upgrade_required"
         {
-            return Err(AuthedApiError::UpgradeRequired);
+            if status == StatusCode::FORBIDDEN && error.error == "upgrade_required" {
+                return Err(AuthedApiError::UpgradeRequired);
+            }
         }
 
         return Err(format!("create_or_get_video/error/{status}: {body:?}").into());
@@ -507,7 +507,8 @@ pub fn from_pending_file_to_chunks(
 
         loop {
             // Check if realtime recording is done
-            if !realtime_is_done.unwrap_or(true) && let Some(ref realtime_receiver) = realtime_upload_done {
+            if !realtime_is_done.unwrap_or(true) {
+                if let Some(ref realtime_receiver) = realtime_upload_done {
                     match realtime_receiver.try_recv() {
                         Ok(_) => realtime_is_done = Some(true),
                         Err(flume::TryRecvError::Empty) => {},
@@ -516,7 +517,7 @@ pub fn from_pending_file_to_chunks(
                         // It possibly means something has gone wrong but that's not the uploader's problem.
                         Err(_) => realtime_is_done = Some(true),
                     }
-
+                }
             }
 
             let file_size = match file.metadata().await {
@@ -567,26 +568,28 @@ pub fn from_pending_file_to_chunks(
                 }
             } else if new_data_size == 0 && realtime_is_done.unwrap_or(true) {
                 // Recording is done and no new data - re-emit first chunk with corrected MP4 header
-                if let Some(first_size) = first_chunk_size && realtime_upload_done.is_some() {
-                    file.seek(std::io::SeekFrom::Start(0)).await?;
+                if let Some(first_size) = first_chunk_size {
+                    if realtime_upload_done.is_some() {
+                        file.seek(std::io::SeekFrom::Start(0)).await?;
 
-                    let chunk_size = first_size as usize;
-                    let mut total_read = 0;
+                        let chunk_size = first_size as usize;
+                        let mut total_read = 0;
 
-                    while total_read < chunk_size {
-                        match file.read(&mut chunk_buffer[total_read..chunk_size]).await {
-                            Ok(0) => break,
-                            Ok(n) => total_read += n,
-                            Err(e) => yield Err(e)?,
+                        while total_read < chunk_size {
+                            match file.read(&mut chunk_buffer[total_read..chunk_size]).await {
+                                Ok(0) => break,
+                                Ok(n) => total_read += n,
+                                Err(e) => yield Err(e)?,
+                            }
                         }
-                    }
 
-                    if total_read > 0 {
-                        yield Chunk {
-                            total_size: file_size,
-                            part_number: 1,
-                            chunk: Bytes::copy_from_slice(&chunk_buffer[..total_read]),
-                        };
+                        if total_read > 0 {
+                            yield Chunk {
+                                total_size: file_size,
+                                part_number: 1,
+                                chunk: Bytes::copy_from_slice(&chunk_buffer[..total_read]),
+                            };
+                        }
                     }
                 }
                 break;
@@ -673,21 +676,52 @@ fn multipart_uploader(
                             // We prefetched for the wrong chunk. Let's try again with the correct part number now that we know it.
                             let md5_sum =
                                 use_md5_hashes.then(|| base64::encode(md5::compute(&chunk).0));
-                            let presigned_url = if let Some(url) = presigned_url?
-                                && part_number == expected_part_number
-                            {
-                                url
-                            } else if part_number == 1
-                                && !use_md5_hashes
-                                // We have a presigned URL left around from the first chunk
-                                && let Some((url, expiry)) = first_chunk_presigned_url
-                                    .lock()
-                                    .unwrap_or_else(PoisonError::into_inner)
-                                    .clone()
-                                // The URL hasn't expired
-                                && expiry.elapsed() < Duration::from_secs(60 * 50)
-                            {
-                                url
+                            let presigned_url = if let Some(url) = presigned_url? {
+                                if part_number == expected_part_number {
+                                    url
+                                } else if part_number == 1
+                                    && !use_md5_hashes
+                                {
+                                    // We have a presigned URL left around from the first chunk
+                                    let cached_url = first_chunk_presigned_url
+                                        .lock()
+                                        .unwrap_or_else(PoisonError::into_inner)
+                                        .clone();
+                                    
+                                    if let Some((url, expiry)) = cached_url {
+                                        // The URL hasn't expired
+                                        if expiry.elapsed() < Duration::from_secs(60 * 50) {
+                                            url
+                                        } else {
+                                            api::upload_multipart_presign_part(
+                                                &app,
+                                                &video_id,
+                                                &upload_id,
+                                                part_number,
+                                                md5_sum.as_deref(),
+                                            )
+                                            .await?
+                                        }
+                                    } else {
+                                        api::upload_multipart_presign_part(
+                                            &app,
+                                            &video_id,
+                                            &upload_id,
+                                            part_number,
+                                            md5_sum.as_deref(),
+                                        )
+                                        .await?
+                                    }
+                                } else {
+                                    api::upload_multipart_presign_part(
+                                        &app,
+                                        &video_id,
+                                        &upload_id,
+                                        part_number,
+                                        md5_sum.as_deref(),
+                                    )
+                                    .await?
+                                }
                             } else {
                                 api::upload_multipart_presign_part(
                                     &app,

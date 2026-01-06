@@ -468,7 +468,7 @@ impl Muxer for WindowsMuxer {
                         let mut last_ffmpeg_frame: Option<ffmpeg::frame::Video> = None;
                         let mut first_timestamp: Option<Duration> = None;
                         let mut last_timestamp: Option<Duration> = None;
-                        let mut frame_count: u64 = 0;
+                        let mut _frame_count: u64 = 0;
 
                         use scap_ffmpeg::AsFFmpeg;
 
@@ -514,7 +514,7 @@ impl Muxer for WindowsMuxer {
                             };
 
                             let normalized_ts = normalize_timestamp(ts, &mut first_timestamp);
-                            frame_count += 1;
+                            _frame_count += 1;
 
                             let Ok(mut output) = output.lock() else {
                                 continue;
@@ -595,11 +595,12 @@ impl VideoMuxer for WindowsMuxer {
 
 impl AudioMuxer for WindowsMuxer {
     fn send_audio_frame(&mut self, frame: AudioFrame, timestamp: Duration) -> anyhow::Result<()> {
-        if let Some(timestamp) = self.pause.adjust(timestamp)?
-            && let Some(encoder) = self.audio_encoder.as_mut()
-            && let Ok(mut output) = self.output.lock()
-        {
-            encoder.send_frame(frame.inner, timestamp, &mut output)?;
+        if let Some(timestamp) = self.pause.adjust(timestamp)? {
+            if let Some(encoder) = self.audio_encoder.as_mut() {
+                if let Ok(mut output) = self.output.lock() {
+                    encoder.send_frame(frame.inner, timestamp, &mut output)?;
+                }
+            }
         }
 
         Ok(())
@@ -1127,11 +1128,12 @@ impl VideoMuxer for WindowsCameraMuxer {
 
 impl AudioMuxer for WindowsCameraMuxer {
     fn send_audio_frame(&mut self, frame: AudioFrame, timestamp: Duration) -> anyhow::Result<()> {
-        if let Some(timestamp) = self.pause.adjust(timestamp)?
-            && let Some(encoder) = self.audio_encoder.as_mut()
-            && let Ok(mut output) = self.output.lock()
-        {
-            encoder.send_frame(frame.inner, timestamp, &mut output)?;
+        if let Some(timestamp) = self.pause.adjust(timestamp)? {
+            if let Some(encoder) = self.audio_encoder.as_mut() {
+                if let Ok(mut output) = self.output.lock() {
+                    encoder.send_frame(frame.inner, timestamp, &mut output)?;
+                }
+            }
         }
 
         Ok(())

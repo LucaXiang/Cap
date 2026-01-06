@@ -404,17 +404,17 @@ async fn extract_audio_from_video(video_path: &str, output_path: &PathBuf) -> Re
 
         {
             for (stream_idx, packet) in input.packets() {
-                if stream_idx.index() == input_stream_index
-                    && let Some(data) = packet.data()
-                {
-                    let mut cloned_packet = ffmpeg::Packet::copy(data);
-                    if let Some(pts) = packet.pts() {
-                        cloned_packet.set_pts(Some(pts));
+                if stream_idx.index() == input_stream_index {
+                    if let Some(data) = packet.data() {
+                        let mut cloned_packet = ffmpeg::Packet::copy(data);
+                        if let Some(pts) = packet.pts() {
+                            cloned_packet.set_pts(Some(pts));
+                        }
+                        if let Some(dts) = packet.dts() {
+                            cloned_packet.set_dts(Some(dts));
+                        }
+                        packet_queue.push(cloned_packet);
                     }
-                    if let Some(dts) = packet.dts() {
-                        cloned_packet.set_dts(Some(dts));
-                    }
-                    packet_queue.push(cloned_packet);
                 }
             }
         }
@@ -665,20 +665,20 @@ fn process_with_whisper(
                 );
 
                 if token_text.starts_with(' ') || token_text.starts_with('\n') {
-                    if !current_word.is_empty()
-                        && let Some(ws) = word_start
-                    {
-                        log::info!(
-                            "    -> Completing word: '{}' ({:.2}s - {:.2}s)",
-                            current_word.trim(),
-                            ws,
-                            word_end
-                        );
-                        words.push(CaptionWord {
-                            text: current_word.trim().to_string(),
-                            start: ws,
-                            end: word_end,
-                        });
+                    if !current_word.is_empty() {
+                        if let Some(ws) = word_start {
+                            log::info!(
+                                "    -> Completing word: '{}' ({:.2}s - {:.2}s)",
+                                current_word.trim(),
+                                ws,
+                                word_end
+                            );
+                            words.push(CaptionWord {
+                                text: current_word.trim().to_string(),
+                                start: ws,
+                                end: word_end,
+                            });
+                        }
                     }
                     current_word = token_text.trim().to_string();
                     word_start = Some(token_start);
@@ -697,20 +697,20 @@ fn process_with_whisper(
             }
         }
 
-        if !current_word.trim().is_empty()
-            && let Some(ws) = word_start
-        {
-            log::info!(
-                "    -> Final word: '{}' ({:.2}s - {:.2}s)",
-                current_word.trim(),
-                ws,
-                word_end
-            );
-            words.push(CaptionWord {
-                text: current_word.trim().to_string(),
-                start: ws,
-                end: word_end,
-            });
+        if !current_word.trim().is_empty() {
+            if let Some(ws) = word_start {
+                log::info!(
+                    "    -> Final word: '{}' ({:.2}s - {:.2}s)",
+                    current_word.trim(),
+                    ws,
+                    word_end
+                );
+                words.push(CaptionWord {
+                    text: current_word.trim().to_string(),
+                    start: ws,
+                    end: word_end,
+                });
+            }
         }
 
         log::info!("  Segment {} produced {} words", i, words.len());

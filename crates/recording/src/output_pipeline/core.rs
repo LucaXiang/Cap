@@ -3,7 +3,7 @@ use anyhow::{Context, anyhow};
 use cap_media_info::{AudioInfo, VideoInfo};
 use cap_timestamp::{Timestamp, Timestamps};
 use futures::{
-    FutureExt, SinkExt, StreamExt, TryFutureExt,
+    Future, FutureExt, SinkExt, StreamExt, TryFutureExt,
     channel::{mpsc, oneshot},
     future::{BoxFuture, Shared},
     lock::Mutex,
@@ -222,12 +222,12 @@ impl TimestampAnomalyTracker {
         let raw_duration = Duration::from_secs_f64(signed_secs);
         let adjusted = raw_duration.saturating_add(self.accumulated_compensation);
 
-        if let Some(last) = self.last_valid_duration
-            && let Some(forward_jump) = adjusted.checked_sub(last)
-        {
-            let jump_secs = forward_jump.as_secs_f64();
-            if jump_secs > LARGE_FORWARD_JUMP_SECS {
-                return self.handle_forward_jump(last, adjusted, jump_secs);
+        if let Some(last) = self.last_valid_duration {
+            if let Some(forward_jump) = adjusted.checked_sub(last) {
+                let jump_secs = forward_jump.as_secs_f64();
+                if jump_secs > LARGE_FORWARD_JUMP_SECS {
+                    return self.handle_forward_jump(last, adjusted, jump_secs);
+                }
             }
         }
 
@@ -1095,11 +1095,12 @@ impl PreparedAudioSources {
                                 total_input_duration_secs,
                             );
 
-                            if let Some(timestamp) = timestamp
-                                && let Err(e) =
+                            if let Some(timestamp) = timestamp {
+                                if let Err(e) =
                                     muxer.lock().await.send_audio_frame(frame, timestamp)
-                            {
-                                error!("Audio encoder: {e}");
+                                {
+                                    error!("Audio encoder: {e}");
+                                }
                             }
                         }
                         Ok::<(), anyhow::Error>(())

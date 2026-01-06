@@ -14,6 +14,7 @@ import {
 } from "solid-js";
 import { produce } from "solid-js/store";
 
+import { t } from "~/components/I18nProvider";
 import { useEditorContext } from "../context";
 import {
 	useSegmentContext,
@@ -73,11 +74,11 @@ export function SceneTrack(props: {
 	const getSceneLabel = (mode: string | undefined) => {
 		switch (mode) {
 			case "cameraOnly":
-				return "Camera Only";
+				return t("editor.timeline.scene.cameraOnly");
 			case "hideCamera":
-				return "Hide Camera";
+				return t("editor.timeline.scene.hideCamera");
 			default:
-				return "Default";
+				return t("editor.timeline.scene.default");
 		}
 	};
 
@@ -196,9 +197,9 @@ export function SceneTrack(props: {
 				each={project.timeline?.sceneSegments}
 				fallback={
 					<div class="text-center text-sm text-[--text-tertiary] flex flex-col justify-center items-center inset-0 w-full bg-gray-3/20 dark:bg-gray-3/10 hover:bg-gray-3/30 dark:hover:bg-gray-3/20 transition-colors rounded-xl pointer-events-none">
-						<div>Click to add scene segment</div>
+						<div>{t("editor.timeline.scene.placeholder")}</div>
 						<div class="text-[10px] text-[--text-tertiary]/40 mt-0.5">
-							(Make the camera full screen, or hide it)
+							{t("editor.timeline.scene.description")}
 						</div>
 					</div>
 				}
@@ -473,7 +474,7 @@ export function SceneTrack(props: {
 									return (
 										<Show when={ctx.width() > 80}>
 											<div class="flex flex-col gap-1 justify-center items-center text-xs whitespace-nowrap text-gray-1 dark:text-gray-12 animate-in fade-in">
-												<span class="opacity-70">Scene</span>
+												<span class="opacity-70">{t("editor.timeline.scene.label")}</span>
 												<div class="flex gap-1 items-center text-md">
 													{getSceneIcon(segment.mode)}
 													{ctx.width() > 120 && (

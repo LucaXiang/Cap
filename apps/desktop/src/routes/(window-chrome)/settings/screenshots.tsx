@@ -20,6 +20,7 @@ import { reconcile } from "solid-js/store";
 import { trackEvent } from "~/utils/analytics";
 import { createTauriEventListener } from "~/utils/createEventListener";
 import { commands, events, type RecordingMeta } from "~/utils/tauri";
+import { t } from "~/components/I18nProvider";
 
 // Icons
 import IconCapTrash from "~icons/cap/trash";
@@ -98,16 +99,16 @@ export default function Screenshots() {
 	return (
 		<div class="flex relative flex-col p-4 space-y-4 w-full h-full">
 			<div class="flex flex-col">
-				<h2 class="text-lg font-medium text-gray-12">Screenshots</h2>
+				<h2 class="text-lg font-medium text-gray-12">{t('screenshotsPage.title')}</h2>
 				<p class="text-sm text-gray-10">
-					Manage your screenshots and perform actions.
+					{t('screenshotsPage.description')}
 				</p>
 			</div>
 			<Show
 				when={screenshots.data && screenshots.data.length > 0}
 				fallback={
 					<p class="text-center text-[--text-tertiary] absolute flex items-center justify-center w-full h-full">
-						No screenshots found
+						{t('screenshotsPage.notFound')}
 					</p>
 				}
 			>
@@ -124,7 +125,7 @@ export default function Screenshots() {
 								onClick={() => setActiveTab(tab.id)}
 							>
 								{tab.icon && tab.icon}
-								<p class="text-xs text-gray-12">{tab.label}</p>
+								<p class="text-xs text-gray-12">{t(`screenshotsPage.tabs.${tab.id}` as any)}</p>
 							</div>
 						)}
 					</For>
@@ -185,31 +186,31 @@ function ScreenshotItem(props: {
 			</div>
 			<div class="flex gap-2 items-center">
 				<TooltipIconButton
-					tooltipText="Open folder"
+					tooltipText={t('screenshotsPage.actions.openFolder')}
 					onClick={props.onOpenFolder}
 				>
 					<IconLucideFolder class="size-4" />
 				</TooltipIconButton>
 
 				<TooltipIconButton
-					tooltipText="Open in editor"
+					tooltipText={t('screenshotsPage.actions.openInEditor')}
 					onClick={props.onOpenEditor}
 				>
 					<IconLucideEdit class="size-4" />
 				</TooltipIconButton>
 
 				<TooltipIconButton
-					tooltipText="Copy image"
+					tooltipText={t('screenshotsPage.actions.copyImage')}
 					onClick={props.onCopyImageToClipboard}
 				>
 					<IconLucideCopy class="size-4" />
 				</TooltipIconButton>
 
 				<TooltipIconButton
-					tooltipText="Delete"
+					tooltipText={t('screenshotsPage.actions.delete')}
 					onClick={async () => {
 						if (
-							!(await ask("Are you sure you want to delete this screenshot?"))
+							!(await ask(t('screenshotsPage.confirm.deleteMessage')))
 						)
 							return;
 						// screenshot.path is the png file. Parent is the .cap folder.

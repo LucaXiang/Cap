@@ -1,0 +1,70 @@
+@echo off
+if "%1"=="--version" (
+    echo 0.29.2
+    exit /b 0
+)
+
+if "%1"=="--libs" (
+    if "%2"=="libavutil" (
+        echo -L"target/native-deps/lib" -lavutil -lm -lpthread
+        exit /b 0
+    )
+    if "%2"=="libavcodec" (
+        echo -L"target/native-deps/lib" -lavcodec -lm -lpthread
+        exit /b 0
+    )
+    if "%2"=="libavformat" (
+        echo -L"target/native-deps/lib" -lavformat -lm -lpthread
+        exit /b 0
+    )
+    if "%2"=="libavdevice" (
+        echo -L"target/native-deps/lib" -lavdevice -lm -lpthread
+        exit /b 0
+    )
+    if "%2"=="libavfilter" (
+        echo -L"target/native-deps/lib" -lavfilter -lm -lpthread
+        exit /b 0
+    )
+    if "%2"=="libswscale" (
+        echo -L"target/native-deps/lib" -lswscale -lm -lpthread
+        exit /b 0
+    )
+    if "%2"=="libswresample" (
+        echo -L"target/native-deps/lib" -lswresample -lm -lpthread
+        exit /b 0
+    )
+)
+
+if "%1"=="--cflags" (
+    if "%2"=="libavutil" (
+        echo -I"target/native-deps/include"
+        exit /b 0
+    )
+    if "%2"=="libavcodec" (
+        echo -I"target/native-deps/include"
+        exit /b 0
+    )
+    if "%2"=="libavformat" (
+        echo -I"target/native-deps/include"
+        exit /b 0
+    )
+    if "%2"=="libavdevice" (
+        echo -I"target/native-deps/include"
+        exit /b 0
+    )
+    if "%2"=="libavfilter" (
+        echo -I"target/native-deps/include"
+        exit /b 0
+    )
+    if "%2"=="libswscale" (
+        echo -I"target/native-deps/include"
+        exit /b 0
+    )
+    if "%2"=="libswresample" (
+        echo -I"target/native-deps/include"
+        exit /b 0
+    )
+)
+
+echo Package libavutil libavcodec libavformat libavdevice libavfilter libswscale libswresample was not found in the pkg-config search path.
+exit /b 1

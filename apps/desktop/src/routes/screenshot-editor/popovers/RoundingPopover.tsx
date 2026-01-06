@@ -4,6 +4,7 @@ import { cx } from "cva";
 import { Show, type ValidComponent } from "solid-js";
 import IconCapChevronDown from "~icons/cap/chevron-down";
 import IconCapCorners from "~icons/cap/corners";
+import { t } from "~/components/I18nProvider";
 import { useScreenshotEditorContext } from "../context";
 import {
 	EditorButton,
@@ -15,9 +16,9 @@ import {
 } from "../ui";
 
 export type CornerRoundingType = "rounded" | "squircle";
-const CORNER_STYLE_OPTIONS = [
-	{ name: "Squircle", value: "squircle" },
-	{ name: "Rounded", value: "rounded" },
+const CORNER_STYLE_OPTIONS = () => [
+	{ name: t("screenshotEditor.appearance.rounding.cornerStyle.squircle"), value: "squircle" },
+	{ name: t("screenshotEditor.appearance.rounding.cornerStyle.rounded"), value: "rounded" },
 ] satisfies Array<{ name: string; value: CornerRoundingType }>;
 
 export function RoundingPopover() {
@@ -33,13 +34,16 @@ export function RoundingPopover() {
 			<Popover.Trigger
 				as={EditorButton}
 				leftIcon={<IconCapCorners class="size-4" />}
-				tooltipText="Corner Rounding"
+				tooltipText={t("screenshotEditor.appearance.rounding.title")}
+				kbd={["U"]}
 			/>
 			<Popover.Portal>
 				<Popover.Content class="z-50 w-[240px] overflow-hidden rounded-xl border border-gray-3 bg-gray-1 shadow-xl animate-in fade-in zoom-in-95 p-4">
 					<div class="flex flex-col gap-4">
 						<div class="flex flex-col gap-2">
-							<span class="text-xs font-medium text-gray-11">Rounding</span>
+							<span class="text-xs font-medium text-gray-11">
+								{t("screenshotEditor.config.rounding")}
+							</span>
 							<Slider
 								value={[project.background.rounding]}
 								onChange={(v) => setProject("background", "rounding", v[0])}
@@ -50,7 +54,7 @@ export function RoundingPopover() {
 							/>
 						</div>
 						<CornerStyleSelect
-							label="Corner Style"
+							label={t("screenshotEditor.appearance.rounding.cornerStyle.label")}
 							value={project.background.roundingType || "squircle"}
 							onChange={(v) => setProject("background", "roundingType", v)}
 						/>
@@ -66,6 +70,8 @@ function CornerStyleSelect(props: {
 	value: CornerRoundingType;
 	onChange: (value: CornerRoundingType) => void;
 }) {
+	const options = createMemo(() => CORNER_STYLE_OPTIONS());
+
 	return (
 		<div class="flex flex-col gap-1.5">
 			<Show when={props.label}>
@@ -76,10 +82,10 @@ function CornerStyleSelect(props: {
 				)}
 			</Show>
 			<KSelect<{ name: string; value: CornerRoundingType }>
-				options={CORNER_STYLE_OPTIONS}
+				options={options()}
 				optionValue="value"
 				optionTextValue="name"
-				value={CORNER_STYLE_OPTIONS.find(
+				value={options().find(
 					(option) => option.value === props.value,
 				)}
 				onChange={(option) => option && props.onChange(option.value)}
@@ -126,3 +132,5 @@ function CornerStyleSelect(props: {
 		</div>
 	);
 }
+
+import { createMemo } from "solid-js";

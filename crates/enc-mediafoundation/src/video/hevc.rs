@@ -217,10 +217,10 @@ impl HevcEncoder {
             let mut count = 0;
             loop {
                 let result = transform.GetInputAvailableType(input_stream_id, count);
-                if let Err(error) = &result
-                    && error.code() == MF_E_NO_MORE_TYPES
-                {
-                    break Ok(None);
+                if let Err(error) = &result {
+                    if error.code() == MF_E_NO_MORE_TYPES {
+                        break Ok(None);
+                    }
                 }
 
                 let input_type = result?;
@@ -239,11 +239,11 @@ impl HevcEncoder {
                     &input_type,
                     MFT_SET_TYPE_TEST_ONLY.0 as u32,
                 );
-                if let Err(error) = &result
-                    && error.code() == MF_E_INVALIDMEDIATYPE
-                {
-                    count += 1;
-                    continue;
+                if let Err(error) = &result {
+                    if error.code() == MF_E_INVALIDMEDIATYPE {
+                        count += 1;
+                        continue;
+                    }
                 }
                 result?;
                 break Ok(Some(input_type));
@@ -382,24 +382,24 @@ impl HevcEncoder {
                 match event_type {
                     MediaFoundation::METransformNeedInput => {
                         should_exit = true;
-                        if !should_stop.load(Ordering::SeqCst)
-                            && let Some((texture, timestamp)) = get_frame()?
-                        {
-                            self.video_processor.process_texture(&texture)?;
-                            let input_buffer = {
-                                MFCreateDXGISurfaceBuffer(
-                                    &ID3D11Texture2D::IID,
-                                    self.video_processor.output_texture(),
-                                    0,
-                                    false,
-                                )?
-                            };
-                            let mf_sample = MFCreateSample()?;
-                            mf_sample.AddBuffer(&input_buffer)?;
-                            mf_sample.SetSampleTime(timestamp.Duration)?;
-                            self.transform
-                                .ProcessInput(self.input_stream_id, &mf_sample, 0)?;
-                            should_exit = false;
+                        if !should_stop.load(Ordering::SeqCst) {
+                            if let Some((texture, timestamp)) = get_frame()? {
+                                self.video_processor.process_texture(&texture)?;
+                                let input_buffer = {
+                                    MFCreateDXGISurfaceBuffer(
+                                        &ID3D11Texture2D::IID,
+                                        self.video_processor.output_texture(),
+                                        0,
+                                        false,
+                                    )?
+                                };
+                                let mf_sample = MFCreateSample()?;
+                                mf_sample.AddBuffer(&input_buffer)?;
+                                mf_sample.SetSampleTime(timestamp.Duration)?;
+                                self.transform
+                                    .ProcessInput(self.input_stream_id, &mf_sample, 0)?;
+                                should_exit = false;
+                            }
                         }
                     }
                     MediaFoundation::METransformHaveOutput => {

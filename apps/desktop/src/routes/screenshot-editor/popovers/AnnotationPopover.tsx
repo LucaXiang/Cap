@@ -5,6 +5,7 @@ import IconLucidePencil from "~icons/lucide/pencil";
 import IconLucideTrash from "~icons/lucide/trash-2";
 import { BACKGROUND_COLORS, hexToRgb, RgbInput } from "../ColorPicker";
 import { type Annotation, useScreenshotEditorContext } from "../context";
+import { t } from "~/components/I18nProvider";
 import { EditorButton, Slider } from "../ui";
 
 export function AnnotationPopover() {
@@ -33,7 +34,7 @@ export function AnnotationPopover() {
 			<Popover.Trigger
 				as={EditorButton}
 				leftIcon={<IconLucidePencil class="size-4" />}
-				tooltipText="Annotation Settings"
+				tooltipText={t("screenshotEditor.annotation.settings")}
 				disabled={!selectedAnnotation()}
 			/>
 			<Popover.Portal>
@@ -43,7 +44,7 @@ export function AnnotationPopover() {
 							when={selectedAnnotation()}
 							fallback={
 								<div class="text-center text-gray-11 text-xs font-medium">
-									Select an annotation to edit.
+									{t("screenshotEditor.annotation.placeholder")}
 								</div>
 							}
 						>
@@ -51,7 +52,7 @@ export function AnnotationPopover() {
 								<div class="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
 									<div class="flex flex-col gap-2">
 										<span class="text-xs font-medium text-gray-11">
-											Stroke Color
+											{t("screenshotEditor.annotation.strokeColor")}
 										</span>
 										<RgbInput
 											value={
@@ -88,67 +89,67 @@ export function AnnotationPopover() {
 
 									{(annotation().type === "rectangle" ||
 										annotation().type === "circle") && (
-										<div class="flex flex-col gap-2">
-											<div class="flex flex-row justify-between items-center">
-												<span class="text-xs font-medium text-gray-11">
-													Fill Color
-												</span>
-												<Toggle
-													size="sm"
-													checked={annotation().fillColor !== "transparent"}
-													onChange={(checked) =>
-														updateSelected(
-															"fillColor",
-															checked ? "#000000" : "transparent",
-														)
-													}
-												/>
-											</div>
-
-											{annotation().fillColor !== "transparent" && (
-												<>
-													<RgbInput
-														value={
-															(hexToRgb(
-																annotation().fillColor === "transparent"
-																	? "#000000"
-																	: annotation().fillColor,
-															)?.slice(0, 3) as [number, number, number]) || [
-																0, 0, 0,
-															]
-														}
-														onChange={(rgb) =>
+											<div class="flex flex-col gap-2">
+												<div class="flex flex-row justify-between items-center">
+													<span class="text-xs font-medium text-gray-11">
+														{t("screenshotEditor.annotation.fillColor")}
+													</span>
+													<Toggle
+														size="sm"
+														checked={annotation().fillColor !== "transparent"}
+														onChange={(checked) =>
 															updateSelected(
 																"fillColor",
-																`#${rgb
-																	.map((c) => c.toString(16).padStart(2, "0"))
-																	.join("")
-																	.toUpperCase()}`,
+																checked ? "#000000" : "transparent",
 															)
 														}
 													/>
-													<div class="flex flex-wrap gap-2 mt-1">
-														<For each={BACKGROUND_COLORS.slice(0, 8)}>
-															{(color) => (
-																<button
-																	type="button"
-																	class="size-5 rounded-full border border-gray-4 hover:scale-110 transition-transform"
-																	style={{ background: color }}
-																	onClick={() =>
-																		updateSelected("fillColor", color)
-																	}
-																/>
-															)}
-														</For>
-													</div>
-												</>
-											)}
-										</div>
-									)}
+												</div>
+
+												{annotation().fillColor !== "transparent" && (
+													<>
+														<RgbInput
+															value={
+																(hexToRgb(
+																	annotation().fillColor === "transparent"
+																		? "#000000"
+																		: annotation().fillColor,
+																)?.slice(0, 3) as [number, number, number]) || [
+																	0, 0, 0,
+																]
+															}
+															onChange={(rgb) =>
+																updateSelected(
+																	"fillColor",
+																	`#${rgb
+																		.map((c) => c.toString(16).padStart(2, "0"))
+																		.join("")
+																		.toUpperCase()}`,
+																)
+															}
+														/>
+														<div class="flex flex-wrap gap-2 mt-1">
+															<For each={BACKGROUND_COLORS.slice(0, 8)}>
+																{(color) => (
+																	<button
+																		type="button"
+																		class="size-5 rounded-full border border-gray-4 hover:scale-110 transition-transform"
+																		style={{ background: color }}
+																		onClick={() =>
+																			updateSelected("fillColor", color)
+																		}
+																	/>
+																)}
+															</For>
+														</div>
+													</>
+												)}
+											</div>
+										)}
 
 									<div class="flex flex-col gap-2">
 										<span class="text-xs font-medium text-gray-11">
-											Stroke Width
+											{t("screenshotEditor.annotation.strokeWidth")}
 										</span>
 										<Slider
 											value={[annotation().strokeWidth]}
@@ -161,7 +162,7 @@ export function AnnotationPopover() {
 
 									<div class="flex flex-col gap-2">
 										<span class="text-xs font-medium text-gray-11">
-											Opacity
+											{t("screenshotEditor.config.opacity")}
 										</span>
 										<Slider
 											value={[annotation().opacity * 100]}
@@ -175,7 +176,7 @@ export function AnnotationPopover() {
 									{annotation().type === "text" && (
 										<div class="flex flex-col gap-2">
 											<span class="text-xs font-medium text-gray-11">
-												Font Size
+												{t("screenshotEditor.config.size")}
 											</span>
 											<Slider
 												value={[annotation().height || 24]} // Text uses height as font size roughly
@@ -198,7 +199,7 @@ export function AnnotationPopover() {
 												setSelectedAnnotationId(null);
 											}}
 										>
-											Delete Annotation
+											{t("screenshotEditor.annotation.delete")}
 										</EditorButton>
 									</div>
 								</div>

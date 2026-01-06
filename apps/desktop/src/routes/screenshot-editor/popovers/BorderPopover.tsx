@@ -1,5 +1,6 @@
 import { Collapsible } from "@kobalte/core/collapsible";
 import { Popover } from "@kobalte/core/popover";
+import { t } from "~/components/I18nProvider";
 import { Toggle } from "~/components/Toggle";
 import IconCapEnlarge from "~icons/cap/enlarge";
 import IconCapImage from "~icons/cap/image";
@@ -22,14 +23,14 @@ export function BorderPopover() {
 			<Popover.Trigger
 				as={EditorButton}
 				leftIcon={<IconCapSquare class="size-4" />}
-				tooltipText="Border"
-				kbd={["E"]}
+				tooltipText={t("screenshotEditor.appearance.border.title")}
+				kbd={["O"]}
 			/>
 			<Popover.Portal>
 				<Popover.Content class="z-50 w-[280px] overflow-hidden rounded-xl border border-gray-3 bg-gray-1 shadow-xl animate-in fade-in zoom-in-95 p-4">
 					<div class="flex flex-col gap-4">
 						<div class="flex flex-row justify-between items-center">
-							<span class="text-xs font-medium text-gray-11">Border</span>
+							<span class="text-xs font-medium text-gray-11">{t("screenshotEditor.appearance.border.title")}</span>
 							<Toggle
 								checked={project.background.border?.enabled ?? false}
 								onChange={(enabled) => {
@@ -50,7 +51,7 @@ export function BorderPopover() {
 						<Collapsible open={project.background.border?.enabled ?? false}>
 							<Collapsible.Content class="overflow-hidden opacity-0 transition-opacity animate-collapsible-up ui-expanded:animate-collapsible-down ui-expanded:opacity-100">
 								<div class="flex flex-col gap-4">
-									<Field name="Width" icon={<IconCapEnlarge class="size-4" />}>
+									<Field name={t("screenshotEditor.config.width")} icon={<IconCapEnlarge class="size-4" />}>
 										<Slider
 											value={[project.background.border?.width ?? 5.0]}
 											onChange={(v) =>
@@ -70,7 +71,7 @@ export function BorderPopover() {
 											formatTooltip="px"
 										/>
 									</Field>
-									<Field name="Color" icon={<IconCapImage class="size-4" />}>
+									<Field name={t("screenshotEditor.config.color")} icon={<IconCapImage class="size-4" />}>
 										<RgbInput
 											value={project.background.border?.color ?? [0, 0, 0]}
 											onChange={(color) =>
@@ -86,7 +87,7 @@ export function BorderPopover() {
 											}
 										/>
 									</Field>
-									<Field name="Opacity" icon={<IconCapShadow class="size-4" />}>
+									<Field name={t("screenshotEditor.config.opacity")} icon={<IconCapShadow class="size-4" />}>
 										<Slider
 											value={[project.background.border?.opacity ?? 50.0]}
 											onChange={(v) =>

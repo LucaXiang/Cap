@@ -58,17 +58,17 @@ struct OpenState {
 
 impl OpenState {
     fn handle_input_connected(&mut self, data: InputConnected) {
-        if let Some(connecting) = &self.connecting
-            && data.id == connecting.id
-        {
-            self.attached = Some(AttachedState {
-                id: data.id,
-                label: data.label.clone(),
-                config: data.config.clone(),
-                buffer_size_frames: data.buffer_size_frames,
-                done_tx: data.done_tx,
-            });
-            self.connecting = None;
+        if let Some(connecting) = &self.connecting {
+            if data.id == connecting.id {
+                self.attached = Some(AttachedState {
+                    id: data.id,
+                    label: data.label.clone(),
+                    config: data.config.clone(),
+                    buffer_size_frames: data.buffer_size_frames,
+                    done_tx: data.done_tx,
+                });
+                self.connecting = None;
+            }
         }
     }
 }
@@ -773,10 +773,10 @@ impl Message<InputConnectFailed> for MicrophoneFeed {
 
         let state = self.state.try_as_open()?;
 
-        if let Some(connecting) = &state.connecting
-            && connecting.id == msg.id
-        {
-            state.connecting = None;
+        if let Some(connecting) = &state.connecting {
+            if connecting.id == msg.id {
+                state.connecting = None;
+            }
         }
 
         Ok(())
@@ -791,13 +791,13 @@ impl Message<LockedInputReconnected> for MicrophoneFeed {
         msg: LockedInputReconnected,
         _: &mut Context<Self, Self::Reply>,
     ) -> Self::Reply {
-        if let State::Locked { inner } = &mut self.state
-            && inner.label == msg.label
-        {
-            inner.id = msg.id;
-            inner.config = msg.config;
-            inner.buffer_size_frames = msg.buffer_size_frames;
-            inner.done_tx = msg.done_tx;
+        if let State::Locked { inner } = &mut self.state {
+            if inner.label == msg.label {
+                inner.id = msg.id;
+                inner.config = msg.config;
+                inner.buffer_size_frames = msg.buffer_size_frames;
+                inner.done_tx = msg.done_tx;
+            }
         }
     }
 }

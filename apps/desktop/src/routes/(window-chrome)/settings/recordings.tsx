@@ -24,6 +24,7 @@ import { createStore, produce, reconcile } from "solid-js/store";
 import CapTooltip from "~/components/Tooltip";
 import { trackEvent } from "~/utils/analytics";
 import { createTauriEventListener } from "~/utils/createEventListener";
+import { t } from "~/components/I18nProvider";
 import {
 	commands,
 	events,
@@ -142,16 +143,16 @@ export default function Recordings() {
 	return (
 		<div class="flex relative flex-col p-4 space-y-4 w-full h-full">
 			<div class="flex flex-col">
-				<h2 class="text-lg font-medium text-gray-12">Recordings</h2>
+				<h2 class="text-lg font-medium text-gray-12">{t('recordingsPage.title')}</h2>
 				<p class="text-sm text-gray-10">
-					Manage your recordings and perform actions.
+					{t('recordingsPage.description')}
 				</p>
 			</div>
 			<Show
 				when={recordings.data && recordings.data.length > 0}
 				fallback={
 					<p class="text-center text-[--text-tertiary] absolute flex items-center justify-center w-full h-full">
-						No recordings found
+						{t('recordingsPage.notFound')}
 					</p>
 				}
 			>
@@ -168,7 +169,7 @@ export default function Recordings() {
 								onClick={() => setActiveTab(tab.id)}
 							>
 								{tab.icon && tab.icon}
-								<p class="text-xs text-gray-12">{tab.label}</p>
+								<p class="text-xs text-gray-12">{t(`recordingsPage.tabs.${tab.id}` as any)}</p>
 							</div>
 						)}
 					</For>
@@ -177,7 +178,7 @@ export default function Recordings() {
 				<div class="flex relative flex-col flex-1 mt-4 rounded-xl border custom-scroll bg-gray-2 border-gray-3">
 					<Show when={filteredRecordings().length === 0}>
 						<p class="text-center text-[--text-tertiary] absolute flex items-center justify-center w-full h-full">
-							No {activeTab()} recordings
+							{t('recordingsPage.noCategoryRecordings', { category: t(`recordingsPage.tabs.${activeTab()}` as any) })}
 						</p>
 					</Show>
 					<ul class="flex flex-col w-full text-[--text-primary]">
@@ -193,8 +194,8 @@ export default function Recordings() {
 									}
 									uploadProgress={
 										recording.meta.upload &&
-										(recording.meta.upload.state === "MultipartUpload" ||
-											recording.meta.upload.state === "SinglePartUpload")
+											(recording.meta.upload.state === "MultipartUpload" ||
+												recording.meta.upload.state === "SinglePartUpload")
 											? uploadProgress[recording.meta.upload.video_id]
 											: undefined
 									}
@@ -277,7 +278,7 @@ function RecordingItem(props: {
 								)}
 							>
 								<IconPhRecordFill class="invert size-2.5 dark:invert-0" />
-								<p>Recording in progress</p>
+								<p>{t('recordingsPage.status.inProgress')}</p>
 							</div>
 						</Show>
 
@@ -297,7 +298,7 @@ function RecordingItem(props: {
 									)}
 								>
 									<IconPhWarningBold class="invert size-2.5 dark:invert-0" />
-									<p>Recording failed</p>
+									<p>{t('recordingsPage.status.failed')}</p>
 								</div>
 							</CapTooltip>
 						</Show>
@@ -318,7 +319,7 @@ function RecordingItem(props: {
 					<Show when={props.recording.meta.sharing}>
 						{(sharing) => (
 							<TooltipIconButton
-								tooltipText="Open link"
+								tooltipText={t('recordingsPage.actions.openLink')}
 								onClick={() => shell.open(sharing().link)}
 							>
 								<IconCapLink class="size-4" />
@@ -326,14 +327,14 @@ function RecordingItem(props: {
 						)}
 					</Show>
 					<TooltipIconButton
-						tooltipText="Edit"
+						tooltipText={t('recordingsPage.actions.edit')}
 						onClick={async () => {
 							if (
 								props.recording.meta.status.status === "Failed" &&
 								!(await confirm(
-									"The recording failed so this file may have issues in the editor! If your having issues recovering the file please reach out to support!",
+									t('recordingsPage.confirm.corruptedMessage'),
 									{
-										title: "Recording is potentially corrupted",
+										title: t('recordingsPage.confirm.corruptedTitle'),
 										kind: "warning",
 									},
 								))
@@ -353,7 +354,7 @@ function RecordingItem(props: {
 								commands.uploadExportedVideo(
 									props.recording.path,
 									"Reupload",
-									new Channel<UploadProgress>((_progress) => {}),
+									new Channel<UploadProgress>((_progress) => { }),
 									null,
 								),
 						}));
@@ -364,7 +365,7 @@ function RecordingItem(props: {
 									when={props.uploadProgress || reupload.isPending}
 									fallback={
 										<TooltipIconButton
-											tooltipText="Reupload"
+											tooltipText={t('recordingsPage.actions.reupload')}
 											onClick={() => reupload.mutate()}
 										>
 											<IconLucideRotateCcw class="size-4" />
@@ -381,7 +382,7 @@ function RecordingItem(props: {
 								<Show when={props.recording.meta.sharing}>
 									{(sharing) => (
 										<TooltipIconButton
-											tooltipText="Open link"
+											tooltipText={t('recordingsPage.actions.openLink')}
 											onClick={() => shell.open(sharing().link)}
 										>
 											<IconCapLink class="size-4" />
@@ -393,15 +394,15 @@ function RecordingItem(props: {
 					}}
 				</Show>
 				<TooltipIconButton
-					tooltipText="Open recording bundle"
+					tooltipText={t('recordingsPage.actions.openBundle')}
 					onClick={() => revealItemInDir(`${props.recording.path}/`)}
 				>
 					<IconLucideFolder class="size-4" />
 				</TooltipIconButton>
 				<TooltipIconButton
-					tooltipText="Delete"
+					tooltipText={t('recordingsPage.actions.delete')}
 					onClick={async () => {
-						if (!(await ask("Are you sure you want to delete this recording?")))
+						if (!(await ask(t('recordingsPage.confirm.deleteMessage'))))
 							return;
 						await remove(props.recording.path, { recursive: true });
 

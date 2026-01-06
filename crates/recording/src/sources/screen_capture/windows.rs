@@ -8,7 +8,7 @@ use cap_media_info::{AudioInfo, VideoInfo};
 use cap_timestamp::{PerformanceCounterTimestamp, Timestamp};
 use cpal::traits::{DeviceTrait, HostTrait};
 use futures::{
-    FutureExt, StreamExt,
+    Future, FutureExt, StreamExt,
     channel::{mpsc, oneshot},
 };
 use scap_ffmpeg::*;

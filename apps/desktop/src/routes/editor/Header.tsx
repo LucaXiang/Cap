@@ -12,6 +12,7 @@ import {
 	onMount,
 	Show,
 } from "solid-js";
+import { t } from "~/components/I18nProvider";
 import Tooltip from "~/components/Tooltip";
 import CaptionControlsWindows11 from "~/components/titlebar/controls/CaptionControlsWindows11";
 import { trackEvent } from "~/utils/analytics";
@@ -79,13 +80,13 @@ export function Header() {
 				<EditorButton
 					onClick={async () => {
 						clearTimelineSelection();
-
-						if (!(await ask("Are you sure you want to delete this recording?")))
+						const confirmDeleteMessage = t("editor.header.confirmDelete");
+						if (!(await ask(confirmDeleteMessage)))
 							return;
 
 						await commands.editorDeleteProject();
 					}}
-					tooltipText="Delete recording"
+					tooltipText={t("editor.header.deleteTooltip")}
 					leftIcon={<IconCapTrash class="w-5" />}
 				/>
 				<EditorButton
@@ -95,7 +96,7 @@ export function Header() {
 						console.log({ path: `${editorInstance.path}/` });
 						revealItemInDir(`${editorInstance.path}/`);
 					}}
-					tooltipText="Open recording bundle"
+					tooltipText={t("editor.header.openBundleTooltip")}
 					leftIcon={<IconLucideFolder class="w-5" />}
 				/>
 
@@ -108,7 +109,7 @@ export function Header() {
 					onClick={() => {
 						if (clearTimelineSelection()) return;
 					}}
-					tooltipText="Captions"
+					tooltipText={t("editor.header.captionsTooltip")}
 					leftIcon={<IconCapCaptions class="w-5" />}
 					comingSoon={true}
 				/>
@@ -116,7 +117,7 @@ export function Header() {
 					onClick={() => {
 						if (clearTimelineSelection()) return;
 					}}
-					tooltipText="Performance"
+					tooltipText={t("editor.header.performanceTooltip")}
 					leftIcon={<IconCapGauge class="w-[18px]" />}
 					comingSoon={true}
 				/>
@@ -145,7 +146,7 @@ export function Header() {
 					disabled={
 						!projectHistory.canUndo() && !editorState.timeline.selection
 					}
-					tooltipText="Undo"
+					tooltipText={t("editor.header.undoTooltip")}
 					leftIcon={<IconCapUndo class="w-5" />}
 				/>
 				<EditorButton
@@ -157,7 +158,7 @@ export function Header() {
 					disabled={
 						!projectHistory.canRedo() && !editorState.timeline.selection
 					}
-					tooltipText="Redo"
+					tooltipText={t("editor.header.redoTooltip")}
 					leftIcon={<IconCapRedo class="w-5" />}
 				/>
 				<div data-tauri-drag-region class="flex-1 h-full" />
@@ -177,7 +178,7 @@ export function Header() {
 					}}
 				>
 					<UploadIcon class="size-4" />
-					Export
+					{t("editor.header.export")}
 				</Button>
 				{ostype() === "windows" && <CaptionControlsWindows11 />}
 			</div>
@@ -215,8 +216,8 @@ const UploadIcon = (props: ComponentProps<"svg">) => {
 				stroke-linejoin="round"
 				class={cx(
 					exportState.type !== "idle" &&
-						exportState.type !== "done" &&
-						"bounce",
+					exportState.type !== "done" &&
+					"bounce",
 				)}
 			/>
 		</svg>
@@ -248,7 +249,7 @@ function NameEditor(props: { name: string }) {
 						"absolute inset-0 px-px m-0 opacity-0 overflow-hidden focus:opacity-100 bg-transparent border-b border-transparent focus:border-gray-7 focus:outline-none peer whitespace-pre",
 						truncated() && "truncate",
 						(prettyName().length < 5 || prettyName().length > 100) &&
-							"focus:border-red-500",
+						"focus:border-red-500",
 					)}
 					value={prettyName()}
 					onInput={(e) => setPrettyName(e.currentTarget.value)}

@@ -1,5 +1,6 @@
 import { emit } from "@tauri-apps/api/event";
 import * as dialog from "@tauri-apps/plugin-dialog";
+import { t } from "~/components/I18nProvider";
 import type { createOptionsQuery } from "./queries";
 import { commands, type RecordingAction } from "./tauri";
 
@@ -13,38 +14,38 @@ export function handleRecordingResult(
 			if (result === "InvalidAuthentication") {
 				const buttons = setOptions
 					? {
-							yes: "Login",
-							no: "Switch to Studio mode",
-							cancel: "Cancel",
-						}
+						yes: t('recordingOverlay.errors.login'),
+						no: t('recordingOverlay.errors.switchToStudio'),
+						cancel: t('recordingOverlay.confirm.cancel'),
+					}
 					: {
-							ok: "Login",
-							cancel: "Cancel",
-						};
+						ok: t('recordingOverlay.errors.login'),
+						cancel: t('recordingOverlay.confirm.cancel'),
+					};
 
-				const result = await dialog.message(
-					"You must be authenticated to start an instant mode recording. Login or switch to Studio mode.",
+				const dialogResult = await dialog.message(
+					t('recordingOverlay.errors.authRequiredMessage'),
 					{
-						title: "Authentication required",
+						title: t('recordingOverlay.errors.authRequiredTitle'),
 						buttons,
 					},
 				);
 
-				if (result === buttons.yes || result === buttons.ok)
+				if (dialogResult === (buttons as any).yes || dialogResult === (buttons as any).ok)
 					emit("start-sign-in");
-				else if (result === buttons.no && setOptions) {
+				else if (dialogResult === (buttons as any).no && setOptions) {
 					setOptions({ mode: "studio" });
 					commands.setRecordingMode("studio");
 				}
 			} else if (result === "UpgradeRequired") commands.showWindow("Upgrade");
 			else
 				await dialog.message(`Error: ${result}`, {
-					title: "Error starting recording",
+					title: t('recordingOverlay.errors.startErrorTitle'),
 				});
 		})
 		.catch((err) =>
 			dialog.message(err, {
-				title: "Error starting recording",
+				title: t('recordingOverlay.errors.startErrorTitle'),
 				kind: "error",
 			}),
 		);

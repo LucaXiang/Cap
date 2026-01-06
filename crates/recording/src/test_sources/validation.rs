@@ -186,13 +186,13 @@ impl RecordingValidator {
             let duration_diff = result.actual_duration.abs_diff(self.expected_duration);
             result.duration_ok = duration_diff <= self.config.duration_tolerance;
 
-            if let Some(expected) = &self.expected_video_info
-                && (video_info.width != expected.width || video_info.height != expected.height)
-            {
-                result.errors.push(format!(
-                    "Resolution mismatch: expected {}x{}, got {}x{}",
-                    expected.width, expected.height, video_info.width, video_info.height
-                ));
+            if let Some(expected) = &self.expected_video_info {
+                if video_info.width != expected.width || video_info.height != expected.height {
+                    result.errors.push(format!(
+                        "Resolution mismatch: expected {}x{}, got {}x{}",
+                        expected.width, expected.height, video_info.width, video_info.height
+                    ));
+                }
             }
         } else if self.expected_video_info.is_some() {
             result.errors.push("No video stream found".to_string());
@@ -234,10 +234,10 @@ impl RecordingValidator {
         for entry in entries {
             let entry = entry?;
             let path = entry.path();
-            if let Some(ext) = path.extension()
-                && ext == "m4s"
-            {
-                fragments.push(path);
+            if let Some(ext) = path.extension() {
+                if ext == "m4s" {
+                    fragments.push(path);
+                }
             }
         }
 
@@ -246,10 +246,10 @@ impl RecordingValidator {
         result.fragments_checked = fragments.len();
 
         for fragment in &fragments {
-            if let Ok(metadata) = std::fs::metadata(fragment)
-                && metadata.len() > 0
-            {
-                result.fragments_valid += 1;
+            if let Ok(metadata) = std::fs::metadata(fragment) {
+                if metadata.len() > 0 {
+                    result.fragments_valid += 1;
+                }
             }
         }
 
@@ -357,50 +357,51 @@ async fn probe_media_file(path: &Path) -> anyhow::Result<MediaProbeResult> {
 
         match codec.medium() {
             ffmpeg::media::Type::Video => {
-                if let Ok(decoder) = ffmpeg::codec::context::Context::from_parameters(codec)
-                    && let Ok(video) = decoder.decoder().video()
-                {
-                    result.video_info = Some(VideoInfo {
-                        pixel_format: video.format(),
-                        width: video.width(),
-                        height: video.height(),
-                        time_base: stream.time_base(),
-                        frame_rate: stream.avg_frame_rate(),
-                    });
+                if let Ok(decoder) = ffmpeg::codec::context::Context::from_parameters(codec) {
+                    if let Ok(video) = decoder.decoder().video() {
+                        result.video_info = Some(VideoInfo {
+                            pixel_format: video.format(),
+                            width: video.width(),
+                            height: video.height(),
+                            time_base: stream.time_base(),
+                            frame_rate: stream.avg_frame_rate(),
+                        });
 
-                    result.video_frame_count = stream.frames() as u64;
-                    video_stream_index = Some(stream.index());
-                    video_time_base = stream.time_base();
+                        result.video_frame_count = stream.frames() as u64;
+                        video_stream_index = Some(stream.index());
+                        video_time_base = stream.time_base();
+                    }
                 }
             }
             ffmpeg::media::Type::Audio => {
-                if let Ok(decoder) = ffmpeg::codec::context::Context::from_parameters(codec)
-                    && let Ok(audio) = decoder.decoder().audio()
-                    && let Ok(info) = AudioInfo::from_decoder(&audio)
-                {
-                    result.audio_info = Some(info);
+                if let Ok(decoder) = ffmpeg::codec::context::Context::from_parameters(codec) {
+                    if let Ok(audio) = decoder.decoder().audio() {
+                        if let Ok(info) = AudioInfo::from_decoder(&audio) {
+                            result.audio_info = Some(info);
+                        }
+                    }
                 }
             }
             _ => {}
         }
     }
 
-    if result.video_frame_count == 0
-        && let Some(video_idx) = video_stream_index
-    {
-        let mut last_pts: Option<i64> = None;
-        for (stream, packet) in input.packets() {
-            if stream.index() == video_idx {
-                result.video_frame_count += 1;
-                if let Some(pts) = packet.pts() {
-                    last_pts = Some(pts);
+    if result.video_frame_count == 0 {
+        if let Some(video_idx) = video_stream_index {
+            let mut last_pts: Option<i64> = None;
+            for (stream, packet) in input.packets() {
+                if stream.index() == video_idx {
+                    result.video_frame_count += 1;
+                    if let Some(pts) = packet.pts() {
+                        last_pts = Some(pts);
+                    }
                 }
             }
-        }
 
-        if let Some(pts) = last_pts {
-            let duration_secs = pts as f64 * video_time_base.0 as f64 / video_time_base.1 as f64;
-            result.duration = Duration::from_secs_f64(duration_secs.max(0.0));
+            if let Some(pts) = last_pts {
+                let duration_secs = pts as f64 * video_time_base.0 as f64 / video_time_base.1 as f64;
+                result.duration = Duration::from_secs_f64(duration_secs.max(0.0));
+            }
         }
     }
 

@@ -20,6 +20,7 @@ import {
 	Show,
 	Suspense,
 } from "solid-js";
+import { t } from "~/components/I18nProvider";
 import { createStore } from "solid-js/store";
 import { generalSettingsStore } from "~/store";
 import { createTauriEventListener } from "~/utils/createEventListener";
@@ -259,7 +260,7 @@ function NativeCameraPreviewPage(props: { disconnected: Accessor<boolean> }) {
 			{/* The camera preview is rendered in Rust by wgpu */}
 			<Show when={cameraPreviewReady.loading}>
 				<div class="w-full flex-1 flex items-center justify-center">
-					<div class="text-gray-11">Loading camera...</div>
+					<div class="text-gray-11">{t("recording.camera.loading")}</div>
 				</div>
 			</Show>
 		</div>
@@ -793,7 +794,7 @@ function Canvas(props: {
 function CameraLoadingState() {
 	return (
 		<div class="w-full flex-1 flex items-center justify-center">
-			<div class="text-gray-11">Loading camera...</div>
+			<div class="text-gray-11">{t("recording.camera.loading")}</div>
 		</div>
 	);
 }
@@ -813,7 +814,7 @@ function CameraDisconnectedOverlay() {
 			style={{ "border-radius": "inherit" }}
 		>
 			<p class="text-center text-sm font-medium text-white/90">
-				Camera disconnected
+				{t("recording.camera.disconnected")}
 			</p>
 		</div>
 	);

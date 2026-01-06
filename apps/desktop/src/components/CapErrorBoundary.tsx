@@ -2,6 +2,7 @@ import { Button } from "@cap/ui-solid";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { ErrorBoundary, type ParentProps } from "solid-js";
+import { t } from "~/components/I18nProvider";
 
 export function CapErrorBoundary(props: ParentProps) {
 	return (
@@ -12,10 +13,10 @@ export function CapErrorBoundary(props: ParentProps) {
 					<div class="w-full h-full flex flex-col justify-center items-center bg-gray-2 border-gray-3 max-h-screen overflow-hidden transition-[border-radius] duration-200 text-[--text-secondary] gap-y-4 max-sm:gap-y-2 px-8 text-center">
 						<IconCapLogo class="max-sm:size-16" />
 						<h1 class="text-[--text-primary] text-3xl max-sm:text-xl font-bold">
-							An Error Occured
+							{t("errorPage.title")}
 						</h1>
 						<p class="mb-2 max-sm:text-sm">
-							We're very sorry, but something has gone wrong.
+							{t("errorPage.description")}
 						</p>
 						<div class="flex flex-row gap-4 max-sm:flex-col max-sm:gap-2">
 							<Button
@@ -23,7 +24,7 @@ export function CapErrorBoundary(props: ParentProps) {
 									writeText(`${e.toString()}\n\n${e.stack}`);
 								}}
 							>
-								Copy Error to Clipboard
+								{t("errorPage.copyError")}
 							</Button>
 							<Button
 								onClick={() => {
@@ -31,13 +32,13 @@ export function CapErrorBoundary(props: ParentProps) {
 								}}
 								variant="gray"
 							>
-								Reload
+								{t("errorPage.reload")}
 							</Button>
 							<Button
 								onClick={() => getCurrentWebviewWindow().close()}
 								variant="destructive"
 							>
-								Close
+								{t("errorPage.close")}
 							</Button>
 						</div>
 

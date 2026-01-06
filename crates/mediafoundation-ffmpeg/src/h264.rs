@@ -133,10 +133,10 @@ impl H264StreamMuxer {
             .unwrap_or_default();
         packet.set_duration(duration);
 
-        if let Ok(t) = unsafe { sample.GetUINT32(&MFSampleExtension_CleanPoint) }
-            && t != 0
-        {
-            packet.set_flags(packet::Flags::KEY);
+        if let Ok(t) = unsafe { sample.GetUINT32(&MFSampleExtension_CleanPoint) } {
+            if t != 0 {
+                packet.set_flags(packet::Flags::KEY);
+            }
         }
 
         packet.set_stream(self.stream_index);

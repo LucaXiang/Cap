@@ -3,6 +3,7 @@ import { cx } from "cva";
 import { createSignal } from "solid-js";
 import IconCapChevronDown from "~icons/cap/chevron-down";
 import { Field, Slider } from "../ui";
+import { t } from "~/components/I18nProvider";
 
 interface Props {
 	size: {
@@ -42,7 +43,7 @@ const ShadowSettings = (props: Props) => {
 				onClick={handleToggle}
 				class="flex gap-1 items-center w-full font-medium text-left transition duration-200 text-gray-12 hover:text-gray-10"
 			>
-				<span class="text-sm">Advanced shadow settings</span>
+				<span class="text-sm">{t("screenshotEditor.appearance.shadow.advanced")}</span>
 				<IconCapChevronDown
 					class={cx(
 						"size-5",
@@ -53,7 +54,7 @@ const ShadowSettings = (props: Props) => {
 			<KCollapsible open={isOpen()}>
 				<KCollapsible.Content class="overflow-hidden opacity-0 transition-opacity animate-collapsible-up ui-expanded:animate-collapsible-down ui-expanded:opacity-100">
 					<div class="mt-4 space-y-6 font-medium">
-						<Field name="Size">
+						<Field name={t("screenshotEditor.config.size")}>
 							<Slider
 								value={props.size.value}
 								onChange={props.size.onChange}
@@ -62,7 +63,7 @@ const ShadowSettings = (props: Props) => {
 								step={0.1}
 							/>
 						</Field>
-						<Field name="Opacity">
+						<Field name={t("screenshotEditor.config.opacity")}>
 							<Slider
 								value={props.opacity.value}
 								onChange={props.opacity.onChange}
@@ -71,7 +72,7 @@ const ShadowSettings = (props: Props) => {
 								step={0.1}
 							/>
 						</Field>
-						<Field name="Blur">
+						<Field name={t("screenshotEditor.config.blur")}>
 							<Slider
 								value={props.blur.value}
 								onChange={props.blur.onChange}

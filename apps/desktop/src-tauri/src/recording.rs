@@ -1593,8 +1593,10 @@ async fn handle_recording_finish(
 	                                return;
                                 }
 
-                                if GeneralSettingsStore::get(&app).ok().flatten().unwrap_or_default().delete_instant_recordings_after_upload && let Err(err) = tokio::fs::remove_dir_all(&recording_dir).await {
-	                                	error!("Failed to remove recording files after upload: {err:?}");
+                                if GeneralSettingsStore::get(&app).ok().flatten().unwrap_or_default().delete_instant_recordings_after_upload {
+	                                	if let Err(err) = tokio::fs::remove_dir_all(&recording_dir).await {
+	                                		error!("Failed to remove recording files after upload: {err:?}");
+	                                	}
 	                                }
 
                             }
@@ -1639,15 +1641,15 @@ async fn handle_recording_finish(
         }
     };
 
-    if let RecordingMetaInner::Instant(_) = &meta_inner
-        && let Ok(mut meta) = RecordingMeta::load_for_project(&recording_dir).map_err(|err| {
+    if let RecordingMetaInner::Instant(_) = &meta_inner {
+        if let Ok(mut meta) = RecordingMeta::load_for_project(&recording_dir).map_err(|err| {
             error!("Failed to load recording meta while saving finished recording: {err}")
-        })
-    {
-        meta.inner = meta_inner.clone();
-        meta.sharing = sharing;
-        meta.save_for_project()
-            .map_err(|e| format!("Failed to save recording meta: {e}"))?;
+        }) {
+            meta.inner = meta_inner.clone();
+            meta.sharing = sharing;
+            meta.save_for_project()
+                .map_err(|e| format!("Failed to save recording meta: {e}"))?;
+        }
     }
 
     if let RecordingMetaInner::Studio(_) = meta_inner {
@@ -1888,11 +1890,11 @@ fn generate_zoom_segments_from_clicks_impl(
 
     let mut merged: Vec<(f64, f64)> = Vec::new();
     for interval in intervals {
-        if let Some(last) = merged.last_mut()
-            && interval.0 <= last.1 + MERGE_GAP_THRESHOLD
-        {
-            last.1 = last.1.max(interval.1);
-            continue;
+        if let Some(last) = merged.last_mut() {
+            if interval.0 <= last.1 + MERGE_GAP_THRESHOLD {
+                last.1 = last.1.max(interval.1);
+                continue;
+            }
         }
         merged.push(interval);
     }

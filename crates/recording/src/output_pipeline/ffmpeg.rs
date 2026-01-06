@@ -473,10 +473,10 @@ impl Muxer for SegmentedVideoMuxer {
     }
 
     fn stop(&mut self) {
-        if let Some(state) = &self.state
-            && let Err(e) = state.video_tx.send(None)
-        {
-            trace!("Segmented encoder channel already closed during stop: {e}");
+        if let Some(state) = &self.state {
+            if let Err(e) = state.video_tx.send(None) {
+                trace!("Segmented encoder channel already closed during stop: {e}");
+            }
         }
     }
 
@@ -539,17 +539,17 @@ impl Muxer for SegmentedVideoMuxer {
             }
 
             if encoder_thread_finished {
-                if let Ok(mut encoder) = state.encoder.lock()
-                    && let Err(e) = encoder.finish_with_timestamp(timestamp)
-                {
-                    warn!("Failed to finish segmented encoder: {e}");
+                if let Ok(mut encoder) = state.encoder.lock() {
+                    if let Err(e) = encoder.finish_with_timestamp(timestamp) {
+                        warn!("Failed to finish segmented encoder: {e}");
+                    }
                 }
             } else {
                 warn!("Skipping encoder finalization because encoder thread is still running");
-                if let Ok(mut encoder) = state.encoder.try_lock()
-                    && let Err(e) = encoder.finish_with_timestamp(timestamp)
-                {
-                    warn!("Failed to finish segmented encoder (non-blocking attempt): {e}");
+                if let Ok(mut encoder) = state.encoder.try_lock() {
+                    if let Err(e) = encoder.finish_with_timestamp(timestamp) {
+                        warn!("Failed to finish segmented encoder (non-blocking attempt): {e}");
+                    }
                 }
             }
         }
@@ -599,14 +599,14 @@ impl SegmentedVideoMuxer {
                 while let Ok(Some((frame, timestamp))) = video_rx.recv() {
                     let encode_start = std::time::Instant::now();
 
-                    if let Ok(mut encoder) = encoder_clone.lock()
-                        && let Err(e) = encoder.queue_frame(frame, timestamp)
-                    {
-                        encode_error_count += 1;
-                        if encode_error_count <= 3 {
-                            warn!("Failed to encode frame: {e}");
-                        } else if encode_error_count == 4 {
-                            warn!("Suppressing further encode errors (too many failures)");
+                    if let Ok(mut encoder) = encoder_clone.lock() {
+                        if let Err(e) = encoder.queue_frame(frame, timestamp) {
+                            encode_error_count += 1;
+                            if encode_error_count <= 3 {
+                                warn!("Failed to encode frame: {e}");
+                            } else if encode_error_count == 4 {
+                                warn!("Suppressing further encode errors (too many failures)");
+                            }
                         }
                     }
 

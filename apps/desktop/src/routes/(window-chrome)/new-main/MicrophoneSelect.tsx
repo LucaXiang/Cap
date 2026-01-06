@@ -14,6 +14,7 @@ import { events, type OSPermissionsCheck } from "~/utils/tauri";
 import InfoPill from "./InfoPill";
 import TargetSelectInfoPill from "./TargetSelectInfoPill";
 import useRequestPermission from "./useRequestPermission";
+import { t } from "~/components/I18nProvider";
 
 const NO_MICROPHONE = "No Microphone";
 
@@ -103,7 +104,7 @@ export function MicrophoneSelectBase(props: {
 
 					Promise.all([
 						CheckMenuItem.new({
-							text: NO_MICROPHONE,
+							text: t('recordingOverlay.menu.noMic'),
 							checked: props.value === null,
 							action: () => handleMicrophoneChange(null),
 						}),
@@ -135,7 +136,7 @@ export function MicrophoneSelectBase(props: {
 				</Show>
 				<IconCapMicrophone class={props.iconClass} />
 				<p class="flex-1 text-sm text-left truncate">
-					{props.value ?? NO_MICROPHONE}
+					{props.value ?? t('recordingOverlay.menu.noMic')}
 				</p>
 				<TargetSelectInfoPill
 					PillComponent={props.PillComponent}

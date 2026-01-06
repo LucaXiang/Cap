@@ -7,6 +7,7 @@ import { cx } from "cva";
 import type { ComponentProps } from "solid-js";
 import { createMemo, createSignal, Show, splitProps } from "solid-js";
 import toast from "solid-toast";
+import { t } from "~/components/I18nProvider";
 import Tooltip from "~/components/Tooltip";
 import {
 	type CaptureDisplayWithThumbnail,
@@ -50,25 +51,25 @@ function formatRefreshRate(refreshRate?: number) {
 
 type TargetCardProps = (
 	| {
-			variant: "display";
-			target: CaptureDisplayWithThumbnail;
-	  }
+		variant: "display";
+		target: CaptureDisplayWithThumbnail;
+	}
 	| {
-			variant: "window";
-			target: CaptureWindowWithThumbnail;
-	  }
+		variant: "window";
+		target: CaptureWindowWithThumbnail;
+	}
 	| {
-			variant: "recording";
-			target: RecordingWithPath;
-			uploadProgress?: number;
-			isReuploading?: boolean;
-			onReupload?: (path: string) => void;
-			onRefetch?: () => void;
-	  }
+		variant: "recording";
+		target: RecordingWithPath;
+		uploadProgress?: number;
+		isReuploading?: boolean;
+		onReupload?: (path: string) => void;
+		onRefetch?: () => void;
+	}
 	| {
-			variant: "screenshot";
-			target: ScreenshotWithPath;
-	  }
+		variant: "screenshot";
+		target: ScreenshotWithPath;
+	}
 ) &
 	Omit<ComponentProps<"button">, "children"> & {
 		highlightQuery?: string;
@@ -132,11 +133,9 @@ export default function TargetCard(props: TargetCardProps) {
 	});
 
 	const subtitle = createMemo(() => {
-		const target = windowTarget();
-		if (target) return target.owner_name;
 		const recording = recordingTarget();
 		if (recording) {
-			return recording.mode === "studio" ? "Studio Mode" : "Instant Mode";
+			return recording.mode === "studio" ? t("recording.modeSelect.studio.title") : t("recording.modeSelect.instant.title");
 		}
 		return undefined;
 	});
@@ -222,10 +221,10 @@ export default function TargetCard(props: TargetCardProps) {
 		if (!screenshot) return;
 		try {
 			await commands.copyScreenshotToClipboard(screenshot.path);
-			toast.success("Screenshot copied to clipboard");
+			toast.success(t("screenshot.messages.copySuccess"));
 		} catch (error) {
 			console.error("Failed to copy screenshot:", error);
-			toast.error("Failed to copy screenshot");
+			toast.error(t("screenshot.messages.copyFailed"));
 		}
 	};
 
@@ -245,10 +244,10 @@ export default function TargetCard(props: TargetCardProps) {
 			});
 			if (!path) return;
 			await commands.copyFileToPath(screenshot.path, path);
-			toast.success("Screenshot saved");
+			toast.success(t("screenshot.messages.saveSuccess"));
 		} catch (error) {
 			console.error("Failed to save screenshot:", error);
-			toast.error("Failed to save screenshot");
+			toast.error(t("screenshot.messages.saveFailed"));
 		}
 	};
 
@@ -279,7 +278,7 @@ export default function TargetCard(props: TargetCardProps) {
 		e.stopPropagation();
 		const recording = recordingTarget();
 		if (!recording) return;
-		if (!(await ask("Are you sure you want to delete this recording?"))) return;
+		if (!(await ask(t("recordingsPage.confirm.deleteMessage")))) return;
 		await remove(recording.path, { recursive: true });
 		recordingProps()?.onRefetch?.();
 	};
@@ -331,9 +330,8 @@ export default function TargetCard(props: TargetCardProps) {
 					{(src) => (
 						<img
 							src={src()}
-							alt={`${
-								local.variant === "display" ? "Display" : "Window"
-							} preview for ${label()}`}
+							alt={`${local.variant === "display" ? "Display" : "Window"
+								} preview for ${label()}`}
 							class="object-cover w-full h-full"
 							loading="lazy"
 							draggable={false}
@@ -360,7 +358,7 @@ export default function TargetCard(props: TargetCardProps) {
 						<div class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-9/20 text-red-11">
 							<IconPhWarningBold class="size-2.5" />
 							<span class="text-[10px] font-medium">
-								{recordingFailed() ? "Recording failed" : "Upload failed"}
+								{recordingFailed() ? t("recordingsPage.status.failed") : t("recordingsPage.status.uploadFailed")}
 							</span>
 						</div>
 					</div>
@@ -386,7 +384,7 @@ export default function TargetCard(props: TargetCardProps) {
 				</div>
 				<Show when={local.variant === "screenshot"}>
 					<div class="flex items-center justify-between px-2 pb-1.5 pt-0.5 gap-1">
-						<Tooltip content="Edit">
+						<Tooltip content={t("recordingsPage.actions.edit")}>
 							<div
 								role="button"
 								tabIndex={-1}
@@ -396,7 +394,7 @@ export default function TargetCard(props: TargetCardProps) {
 								<IconLucideEdit class="size-3.5" />
 							</div>
 						</Tooltip>
-						<Tooltip content="Copy to clipboard">
+						<Tooltip content={t("recordingsPage.actions.copyToClipboard")}>
 							<div
 								role="button"
 								tabIndex={-1}
@@ -406,7 +404,7 @@ export default function TargetCard(props: TargetCardProps) {
 								<IconLucideCopy class="size-3.5" />
 							</div>
 						</Tooltip>
-						<Tooltip content="Save as...">
+						<Tooltip content={t("recordingsPage.actions.saveAs")}>
 							<div
 								role="button"
 								tabIndex={-1}
@@ -431,7 +429,7 @@ export default function TargetCard(props: TargetCardProps) {
 						return (
 							<div class="flex items-center justify-between px-2 pb-1.5 pt-0.5 gap-1">
 								<Show when={isStudio}>
-									<Tooltip content="Edit">
+									<Tooltip content={t("recordingsPage.actions.edit")}>
 										<div
 											role="button"
 											tabIndex={-1}
@@ -447,7 +445,7 @@ export default function TargetCard(props: TargetCardProps) {
 										when={hasProgress}
 										fallback={
 											<Tooltip
-												content={uploadFailed ? "Retry upload" : "Reupload"}
+												content={uploadFailed ? t("recordingsPage.actions.retryUpload") : t("recordingsPage.actions.reupload")}
 											>
 												<div
 													role="button"
@@ -470,7 +468,7 @@ export default function TargetCard(props: TargetCardProps) {
 									</Show>
 								</Show>
 								<Show when={recording.sharing}>
-									<Tooltip content="Open link">
+									<Tooltip content={t("recordingsPage.actions.openLink")}>
 										<div
 											role="button"
 											tabIndex={-1}
@@ -481,7 +479,7 @@ export default function TargetCard(props: TargetCardProps) {
 										</div>
 									</Tooltip>
 								</Show>
-								<Tooltip content="Open folder">
+								<Tooltip content={t("recordingsPage.actions.openBundle")}>
 									<div
 										role="button"
 										tabIndex={-1}
@@ -491,7 +489,7 @@ export default function TargetCard(props: TargetCardProps) {
 										<IconLucideFolder class="size-3.5" />
 									</div>
 								</Tooltip>
-								<Tooltip content="Delete">
+								<Tooltip content={t("recordingsPage.actions.delete")}>
 									<div
 										role="button"
 										tabIndex={-1}

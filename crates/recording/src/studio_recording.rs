@@ -88,18 +88,20 @@ impl Actor {
 
         let segment_stop_time = current_time_f64();
 
-        let cursors = if let Some(cursor) = pipeline.cursor.as_mut()
-            && let Ok(res) = cursor.actor.rx.clone().await
-        {
-            std::fs::write(
-                &cursor.output_path,
-                serde_json::to_string_pretty(&CursorEvents {
-                    clicks: res.clicks,
-                    moves: res.moves,
-                })?,
-            )?;
+        let cursors = if let Some(cursor) = pipeline.cursor.as_mut() {
+            if let Ok(res) = cursor.actor.rx.clone().await {
+                std::fs::write(
+                    &cursor.output_path,
+                    serde_json::to_string_pretty(&CursorEvents {
+                        clicks: res.clicks,
+                        moves: res.moves,
+                    })?,
+                )?;
 
-            (res.cursors, res.next_cursor_id)
+                (res.cursors, res.next_cursor_id)
+            } else {
+                (Default::default(), 0)
+            }
         } else {
             (Default::default(), 0)
         };
@@ -406,10 +408,10 @@ impl Pipeline {
 
         tokio::spawn(async move {
             while let Some(res) = futures.next().await {
-                if let Err(err) = res
-                    && completion_tx.borrow().is_none()
-                {
-                    let _ = completion_tx.send(Some(Err(err)));
+                if let Err(err) = res {
+                    if completion_tx.borrow().is_none() {
+                        let _ = completion_tx.send(Some(Err(err)));
+                    }
                 }
             }
         });

@@ -62,10 +62,10 @@ impl AuthStore {
             return Err("User not authenticated".to_string());
         };
 
-        if let Some(plan) = &auth.plan
-            && plan.manual
-        {
-            return Ok(());
+        if let Some(plan) = &auth.plan {
+            if plan.manual {
+                return Ok(());
+            }
         }
 
         let mut auth = auth;

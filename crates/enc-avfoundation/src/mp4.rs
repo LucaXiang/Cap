@@ -260,11 +260,11 @@ impl MP4Encoder {
 
         self.last_frame_timestamp = Some(timestamp);
 
-        if let Some(pause_timestamp) = self.pause_timestamp
-            && let Some(gap) = timestamp.checked_sub(pause_timestamp)
-        {
-            self.timestamp_offset += gap;
-            self.pause_timestamp = None;
+        if let Some(pause_timestamp) = self.pause_timestamp {
+            if let Some(gap) = timestamp.checked_sub(pause_timestamp) {
+                self.timestamp_offset += gap;
+                self.pause_timestamp = None;
+            }
         }
 
         let mut pts_duration = timestamp
@@ -322,11 +322,11 @@ impl MP4Encoder {
             return Err(QueueFrameError::NoEncoder);
         };
 
-        if let Some(pause_timestamp) = self.pause_timestamp
-            && let Some(gap) = timestamp.checked_sub(pause_timestamp)
-        {
-            self.timestamp_offset += gap;
-            self.pause_timestamp = None;
+        if let Some(pause_timestamp) = self.pause_timestamp {
+            if let Some(gap) = timestamp.checked_sub(pause_timestamp) {
+                self.timestamp_offset += gap;
+                self.pause_timestamp = None;
+            }
         }
 
         if !audio_input.is_ready_for_more_media_data() {

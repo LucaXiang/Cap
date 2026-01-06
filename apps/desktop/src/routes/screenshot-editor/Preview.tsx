@@ -7,6 +7,7 @@ import {
 	onCleanup,
 	Show,
 } from "solid-js";
+import { t } from "~/components/I18nProvider";
 import IconCapZoomIn from "~icons/cap/zoom-in";
 import IconCapZoomOut from "~icons/cap/zoom-out";
 import { EditorButton, Slider } from "../editor/ui";
@@ -100,19 +101,28 @@ export function Preview(props: { zoom: number; setZoom: (z: number) => void }) {
 		onCleanup(() => window.removeEventListener("keydown", handleKeyDown));
 	});
 
+	let wheelRafId: number | null = null;
 	const handleWheel = (e: WheelEvent) => {
 		e.preventDefault();
-		if (e.ctrlKey) {
-			const delta = -e.deltaY;
-			const zoomStep = 0.005;
-			const newZoom = Math.max(0.1, Math.min(3, props.zoom + delta * zoomStep));
-			props.setZoom(newZoom);
-		} else {
-			setPan((p) => ({
-				x: p.x - e.deltaX,
-				y: p.y - e.deltaY,
-			}));
-		}
+		if (wheelRafId) return;
+
+		wheelRafId = requestAnimationFrame(() => {
+			if (e.ctrlKey) {
+				const delta = -e.deltaY;
+				const zoomStep = 0.005;
+				const newZoom = Math.max(
+					0.1,
+					Math.min(3, props.zoom + delta * zoomStep),
+				);
+				props.setZoom(newZoom);
+			} else {
+				setPan((p) => ({
+					x: p.x - e.deltaX,
+					y: p.y - e.deltaY,
+				}));
+			}
+			wheelRafId = null;
+		});
 	};
 
 	const handleMouseDown = (e: MouseEvent) => {
@@ -139,13 +149,20 @@ export function Preview(props: { zoom: number; setZoom: (z: number) => void }) {
 		});
 	};
 
+	let mouseMoveRafId: number | null = null;
 	const handleMouseMove = (e: MouseEvent) => {
 		if (!isDragging()) return;
-		const dx = e.clientX - dragStart().x;
-		const dy = e.clientY - dragStart().y;
-		setPan({
-			x: dragStart().panX + dx,
-			y: dragStart().panY + dy,
+
+		if (mouseMoveRafId) return;
+
+		mouseMoveRafId = requestAnimationFrame(() => {
+			const dx = e.clientX - dragStart().x;
+			const dy = e.clientY - dragStart().y;
+			setPan({
+				x: dragStart().panX + dx,
+				y: dragStart().panY + dy,
+			});
+			mouseMoveRafId = null;
 		});
 	};
 
@@ -211,7 +228,7 @@ export function Preview(props: { zoom: number; setZoom: (z: number) => void }) {
 				</div>
 				<Show
 					when={!!latestFrame()}
-					fallback={<div class="text-gray-11">Loading preview...</div>}
+					fallback={<div class="text-gray-11">{t("screenshot.editor.loadingPreview")}</div>}
 				>
 					{(_) => {
 						const padding = 20;

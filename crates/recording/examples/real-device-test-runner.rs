@@ -234,6 +234,7 @@ struct AVSyncValidation {
 }
 
 #[derive(Debug, Clone, Default)]
+#[allow(dead_code)]
 struct SegmentSyncResult {
     index: usize,
     metrics: StreamSyncMetrics,

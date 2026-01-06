@@ -7,6 +7,7 @@ import {
 import { message } from "@tauri-apps/plugin-dialog";
 import { createEffect, lazy, onCleanup, onMount, Suspense } from "solid-js";
 import { Toaster } from "solid-toast";
+import { I18nProvider } from "./components/I18nProvider";
 
 import "@cap/ui-solid/main.css";
 import "unfonts.css";
@@ -88,13 +89,17 @@ const queryClient = new QueryClient({
 
 export default function App() {
 	return (
-		<QueryClientProvider client={queryClient}>
-			<Suspense>
-				<Inner />
-			</Suspense>
-		</QueryClientProvider>
+		<I18nProvider>
+			<QueryClientProvider client={queryClient}>
+				<Suspense>
+					<Inner />
+				</Suspense>
+			</QueryClientProvider>
+		</I18nProvider>
 	);
 }
+
+
 
 function Inner() {
 	const currentWindow = getCurrentWebviewWindow();
@@ -102,6 +107,8 @@ function Inner() {
 
 	onMount(() => {
 		initAnonymousUser();
+		// Reset startup state so user can see the welcome screen again
+		generalSettingsStore.set({ hasCompletedStartup: false });
 	});
 
 	return (
@@ -206,22 +213,30 @@ function Inner() {
 
 function createThemeListener(currentWindow: WebviewWindow) {
 	const generalSettings = generalSettingsStore.createQuery();
+	let lastAppliedTheme: AppTheme | null | undefined = undefined;
 
 	createEffect(() => {
-		update(generalSettings.data?.theme ?? null);
+		const theme = generalSettings.data?.theme;
+		if (theme !== lastAppliedTheme) {
+			update(theme ?? null);
+		}
 	});
 
 	onMount(async () => {
-		const unlisten = await currentWindow.onThemeChanged((_) =>
-			update(generalSettings.data?.theme),
-		);
+		const unlisten = await currentWindow.onThemeChanged((payload) => {
+			// Use lastAppliedTheme to avoid race conditions with lagged store data
+			if (lastAppliedTheme === "system") {
+				update("system");
+			}
+		});
 		onCleanup(() => unlisten?.());
 	});
 
 	function update(appTheme: AppTheme | null | undefined) {
 		if (location.pathname === "/camera") return;
-
 		if (appTheme === undefined || appTheme === null) return;
+
+		lastAppliedTheme = appTheme;
 
 		const isDark =
 			appTheme === "dark" ||
@@ -234,7 +249,7 @@ function createThemeListener(currentWindow: WebviewWindow) {
 			} else {
 				localStorage.setItem("cap-theme", appTheme);
 			}
-		} catch {}
+		} catch { }
 
 		commands.setTheme(appTheme).then(() => {
 			document.documentElement.classList.toggle("dark", isDark);

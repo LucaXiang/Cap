@@ -6,7 +6,7 @@ use cap_media_info::AudioInfo;
 use cpal::SampleFormat;
 use futures::{SinkExt, channel::mpsc};
 use kameo::error::SendError;
-use std::{borrow::Cow, sync::Arc};
+use std::{borrow::Cow, future::Future, sync::Arc};
 use thiserror::Error;
 
 const MICROPHONE_TARGET_CHANNELS: u16 = 1;

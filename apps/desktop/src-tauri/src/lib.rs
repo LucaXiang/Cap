@@ -130,10 +130,10 @@ impl FinalizingRecordings {
             .recordings
             .lock()
             .expect("FinalizingRecordings mutex poisoned");
-        if let Some((tx, _)) = recordings.remove(path)
-            && tx.send(true).is_err()
-        {
-            debug!("Finalizing receiver dropped for path: {:?}", path);
+        if let Some((tx, _)) = recordings.remove(path) {
+            if tx.send(true).is_err() {
+                debug!("Finalizing receiver dropped for path: {:?}", path);
+            }
         }
     }
 
@@ -307,20 +307,20 @@ impl App {
             recording.pause().await.map_err(|e| e.to_string())?;
         }
 
-        let (title, body) = match kind {
+        let (title_key, body_key) = match kind {
             RecordingInputKind::Microphone => (
-                "Microphone disconnected",
-                "Recording paused. Reconnect your microphone, then resume or stop the recording.",
+                "notifications.micDisconnected.title",
+                "notifications.micDisconnected.body",
             ),
             RecordingInputKind::Camera => (
-                "Camera disconnected",
-                "Recording paused. Reconnect your camera, then resume or stop the recording.",
+                "notifications.cameraDisconnected.title",
+                "notifications.cameraDisconnected.body",
             ),
         };
 
         let _ = NewNotification {
-            title: title.to_string(),
-            body: body.to_string(),
+            title: title_key.to_string(),
+            body: body_key.to_string(),
             is_error: true,
         }
         .emit(&self.handle);
@@ -420,17 +420,17 @@ async fn set_mic_input(state: MutableState<'_, App>, label: Option<String>) -> R
         }
     }
 
-    if let Some(handle) = studio_handle
-        && desired_label.is_some()
-    {
-        let mic_lock = mic_feed
-            .ask(microphone::Lock)
-            .await
-            .map_err(|e| e.to_string())?;
-        handle
-            .set_mic_feed(Some(Arc::new(mic_lock)))
-            .await
-            .map_err(|e| e.to_string())?;
+    if let Some(handle) = studio_handle {
+        if desired_label.is_some() {
+            let mic_lock = mic_feed
+                .ask(microphone::Lock)
+                .await
+                .map_err(|e| e.to_string())?;
+            handle
+                .set_mic_feed(Some(Arc::new(mic_lock)))
+                .await
+                .map_err(|e| e.to_string())?;
+        }
     }
 
     {
@@ -554,17 +554,17 @@ async fn set_camera_input(
         }
     }
 
-    if let Some(handle) = studio_handle
-        && id.is_some()
-    {
-        let camera_lock = camera_feed
-            .ask(feeds::camera::Lock)
-            .await
-            .map_err(|e| e.to_string())?;
-        handle
-            .set_camera_feed(Some(Arc::new(camera_lock)))
-            .await
-            .map_err(|e| e.to_string())?;
+    if let Some(handle) = studio_handle {
+        if id.is_some() {
+            let camera_lock = camera_feed
+                .ask(feeds::camera::Lock)
+                .await
+                .map_err(|e| e.to_string())?;
+            handle
+                .set_camera_feed(Some(Arc::new(camera_lock)))
+                .await
+                .map_err(|e| e.to_string())?;
+        }
     }
 
     {
@@ -762,24 +762,26 @@ fn spawn_microphone_watcher(app_handle: AppHandle) {
                 )
             };
 
-            if should_check && let Some(selected_label) = label {
-                let available = microphone::MicrophoneFeed::list().contains_key(&selected_label);
+            if should_check {
+                if let Some(selected_label) = label {
+                    let available = microphone::MicrophoneFeed::list().contains_key(&selected_label);
 
-                if !available && !is_marked {
-                    let mut app = state.write().await;
-                    if let Err(err) = app
-                        .handle_input_disconnect(RecordingInputKind::Microphone)
-                        .await
-                    {
-                        warn!("Failed to handle mic disconnect: {err}");
-                    }
-                } else if available && is_marked {
-                    let mut app = state.write().await;
-                    if let Err(err) = app
-                        .handle_input_restored(RecordingInputKind::Microphone)
-                        .await
-                    {
-                        warn!("Failed to handle mic reconnection: {err}");
+                    if !available && !is_marked {
+                        let mut app = state.write().await;
+                        if let Err(err) = app
+                            .handle_input_disconnect(RecordingInputKind::Microphone)
+                            .await
+                        {
+                            warn!("Failed to handle mic disconnect: {err}");
+                        }
+                    } else if available && is_marked {
+                        let mut app = state.write().await;
+                        if let Err(err) = app
+                            .handle_input_restored(RecordingInputKind::Microphone)
+                            .await
+                        {
+                            warn!("Failed to handle mic reconnection: {err}");
+                        }
                     }
                 }
             }
@@ -807,29 +809,31 @@ fn spawn_camera_watcher(app_handle: AppHandle) {
                 )
             };
 
-            if should_check && let Some(ref selected_id) = camera_id {
-                let available = is_camera_available(selected_id);
-                debug!(
-                    "Camera watcher: checking availability for {:?}, available={}, is_marked={}",
-                    selected_id, available, is_marked
-                );
-
-                if !available && !is_marked {
-                    warn!(
-                        "Camera watcher: camera {:?} detected as unavailable, pausing recording",
-                        selected_id
+            if should_check {
+                if let Some(ref selected_id) = camera_id {
+                    let available = is_camera_available(selected_id);
+                    debug!(
+                        "Camera watcher: checking availability for {:?}, available={}, is_marked={}",
+                        selected_id, available, is_marked
                     );
-                    let mut app = state.write().await;
-                    if let Err(err) = app
-                        .handle_input_disconnect(RecordingInputKind::Camera)
-                        .await
-                    {
-                        warn!("Failed to handle camera disconnect: {err}");
-                    }
-                } else if available && is_marked {
-                    let mut app = state.write().await;
-                    if let Err(err) = app.handle_input_restored(RecordingInputKind::Camera).await {
-                        warn!("Failed to handle camera reconnection: {err}");
+
+                    if !available && !is_marked {
+                        warn!(
+                            "Camera watcher: camera {:?} detected as unavailable, pausing recording",
+                            selected_id
+                        );
+                        let mut app = state.write().await;
+                        if let Err(err) = app
+                            .handle_input_disconnect(RecordingInputKind::Camera)
+                            .await
+                        {
+                            warn!("Failed to handle camera disconnect: {err}");
+                        }
+                    } else if available && is_marked {
+                        let mut app = state.write().await;
+                        if let Err(err) = app.handle_input_restored(RecordingInputKind::Camera).await {
+                            warn!("Failed to handle camera reconnection: {err}");
+                        }
                     }
                 }
             }
@@ -1586,10 +1590,10 @@ fn close_recordings_overlay_window(app: AppHandle) {
         }
     }
 
-    if !cfg!(target_os = "macos")
-        && let Some(window) = CapWindowId::RecordingsOverlay.get(&app)
-    {
-        let _ = window.close();
+    if !cfg!(target_os = "macos") {
+        if let Some(window) = CapWindowId::RecordingsOverlay.get(&app) {
+            let _ = window.close();
+        }
     }
 }
 
@@ -2107,10 +2111,10 @@ fn list_screenshots(app: AppHandle) -> Result<Vec<(PathBuf, RecordingMeta)>, Str
 async fn check_upgraded_and_update(app: AppHandle) -> Result<bool, String> {
     println!("Checking upgraded status and updating...");
 
-    if let Ok(Some(settings)) = GeneralSettingsStore::get(&app)
-        && settings.commercial_license.is_some()
-    {
-        return Ok(true);
+    if let Ok(Some(settings)) = GeneralSettingsStore::get(&app) {
+        if settings.commercial_license.is_some() {
+            return Ok(true);
+        }
     }
 
     let Ok(Some(auth)) = AuthStore::get(&app) else {
@@ -2119,10 +2123,10 @@ async fn check_upgraded_and_update(app: AppHandle) -> Result<bool, String> {
         return Ok(false);
     };
 
-    if let Some(ref plan) = auth.plan
-        && plan.manual
-    {
-        return Ok(true);
+    if let Some(ref plan) = auth.plan {
+        if plan.manual {
+            return Ok(true);
+        }
     }
 
     println!(
@@ -2169,10 +2173,10 @@ async fn check_upgraded_and_update(app: AppHandle) -> Result<bool, String> {
 #[specta::specta]
 #[instrument(skip(app))]
 fn open_external_link(app: tauri::AppHandle, url: String) -> Result<(), String> {
-    if let Ok(Some(settings)) = GeneralSettingsStore::get(&app)
-        && settings.disable_auto_open_links
-    {
-        return Ok(());
+    if let Ok(Some(settings)) = GeneralSettingsStore::get(&app) {
+        if settings.disable_auto_open_links {
+            return Ok(());
+        }
     }
 
     app.shell()
@@ -2759,10 +2763,23 @@ pub async fn run(recording_logging_handle: LoggingHandle, logs_dir: PathBuf) {
             });
 
             {
-                let (server_url, should_update) = if cfg!(debug_assertions)
-                    && let Ok(url) = std::env::var("VITE_SERVER_URL")
-                {
-                    (url, true)
+                let (server_url, should_update) = if cfg!(debug_assertions) {
+                    if let Ok(url) = std::env::var("VITE_SERVER_URL") {
+                        (url, true)
+                    } else if let Some(url) = GeneralSettingsStore::get(&app)
+                        .ok()
+                        .flatten()
+                        .map(|v| v.server_url.clone())
+                    {
+                        (url, false)
+                    } else {
+                        (
+                            option_env!("VITE_SERVER_URL")
+                                .unwrap_or("https://cap.so")
+                                .to_string(),
+                            true,
+                        )
+                    }
                 } else if let Some(url) = GeneralSettingsStore::get(&app)
                     .ok()
                     .flatten()
@@ -2922,10 +2939,10 @@ pub async fn run(recording_logging_handle: LoggingHandle, logs_dir: PathBuf) {
                                 tokio::spawn(async move {
                                     let state = app.state::<ArcLock<App>>();
                                     let app_state = state.read().await;
-                                    if !app_state.is_recording_active_or_pending()
-                                        && let Some(camera_window) = CapWindowId::Camera.get(&app)
-                                    {
-                                        let _ = camera_window.close();
+                                    if !app_state.is_recording_active_or_pending() {
+                                        if let Some(camera_window) = CapWindowId::Camera.get(&app) {
+                                            let _ = camera_window.close();
+                                        }
                                     }
                                 });
                             }
@@ -2998,15 +3015,15 @@ pub async fn run(recording_logging_handle: LoggingHandle, logs_dir: PathBuf) {
                             }
                             CapWindowId::Settings => {
                                 for (label, window) in app.webview_windows() {
-                                    if let Ok(id) = CapWindowId::from_str(&label)
-                                        && matches!(
+                                    if let Ok(id) = CapWindowId::from_str(&label) {
+                                        if matches!(
                                             id,
                                             CapWindowId::TargetSelectOverlay { .. }
                                                 | CapWindowId::Main
                                                 | CapWindowId::Camera
-                                        )
-                                    {
-                                        let _ = window.show();
+                                        ) {
+                                            let _ = window.show();
+                                        }
                                     }
                                 }
 
@@ -3019,15 +3036,15 @@ pub async fn run(recording_logging_handle: LoggingHandle, logs_dir: PathBuf) {
                             }
                             CapWindowId::Upgrade | CapWindowId::ModeSelect => {
                                 for (label, window) in app.webview_windows() {
-                                    if let Ok(id) = CapWindowId::from_str(&label)
-                                        && matches!(
+                                    if let Ok(id) = CapWindowId::from_str(&label) {
+                                        if matches!(
                                             id,
                                             CapWindowId::TargetSelectOverlay { .. }
                                                 | CapWindowId::Main
                                                 | CapWindowId::Camera
-                                        )
-                                    {
-                                        let _ = window.show();
+                                        ) {
+                                            let _ = window.show();
+                                        }
                                     }
                                 }
                                 return;
@@ -3043,16 +3060,17 @@ pub async fn run(recording_logging_handle: LoggingHandle, logs_dir: PathBuf) {
                         };
                     }
 
-                    if let Some(settings) = GeneralSettingsStore::get(app).unwrap_or(None)
-                        && settings.hide_dock_icon
-                        && app
-                            .webview_windows()
-                            .keys()
-                            .all(|label| !CapWindowId::from_str(label).unwrap().activates_dock())
-                    {
-                        #[cfg(target_os = "macos")]
-                        app.set_activation_policy(tauri::ActivationPolicy::Accessory)
-                            .ok();
+                    if let Some(settings) = GeneralSettingsStore::get(app).unwrap_or(None) {
+                        if settings.hide_dock_icon
+                            && app
+                                .webview_windows()
+                                .keys()
+                                .all(|label| !CapWindowId::from_str(label).unwrap().activates_dock())
+                        {
+                            #[cfg(target_os = "macos")]
+                            app.set_activation_policy(tauri::ActivationPolicy::Accessory)
+                                .ok();
+                        }
                     }
                 }
                 #[cfg(target_os = "macos")]
@@ -3061,20 +3079,21 @@ pub async fn run(recording_logging_handle: LoggingHandle, logs_dir: PathBuf) {
 
                     if matches!(window_id, Ok(CapWindowId::Upgrade)) {
                         for (label, window) in app.webview_windows() {
-                            if let Ok(id) = CapWindowId::from_str(&label)
-                                && matches!(id, CapWindowId::TargetSelectOverlay { .. })
-                            {
-                                let _ = window.hide();
+                            if let Ok(id) = CapWindowId::from_str(&label) {
+                                if matches!(id, CapWindowId::TargetSelectOverlay { .. }) {
+                                    let _ = window.hide();
+                                }
                             }
                         }
                     }
 
-                    if *focused
-                        && let Ok(window_id) = window_id
-                        && window_id.activates_dock()
-                    {
-                        app.set_activation_policy(tauri::ActivationPolicy::Regular)
-                            .ok();
+                    if *focused {
+                        if let Ok(window_id) = window_id {
+                            if window_id.activates_dock() {
+                                app.set_activation_policy(tauri::ActivationPolicy::Regular)
+                                    .ok();
+                            }
+                        }
                     }
                 }
                 WindowEvent::DragDrop(tauri::DragDropEvent::Drop { paths, .. }) => {
@@ -3176,13 +3195,13 @@ async fn resume_uploads(app: AppHandle) -> Result<(), String> {
                 // This should only happen if the application crashes while recording
                 match &mut meta.inner {
                     RecordingMetaInner::Studio(meta_box) => {
-                        if let StudioRecordingMeta::MultipleSegments { inner } = &mut **meta_box
-                            && let Some(StudioRecordingStatus::InProgress) = &inner.status
-                        {
-                            inner.status = Some(StudioRecordingStatus::Failed {
-                                error: "Recording crashed".to_string(),
-                            });
-                            needs_save = true;
+                        if let StudioRecordingMeta::MultipleSegments { inner } = &mut **meta_box {
+                            if let Some(StudioRecordingStatus::InProgress) = &inner.status {
+                                inner.status = Some(StudioRecordingStatus::Failed {
+                                    error: "Recording crashed".to_string(),
+                                });
+                                needs_save = true;
+                            }
                         }
                     }
                     RecordingMetaInner::Instant(InstantRecordingMeta::InProgress { .. }) => {
@@ -3195,8 +3214,10 @@ async fn resume_uploads(app: AppHandle) -> Result<(), String> {
                 }
 
                 // Save the updated meta if we made changes
-                if needs_save && let Err(err) = meta.save_for_project() {
-                    error!("Failed to save recording meta for {path:?}: {err}");
+                if needs_save {
+                    if let Err(err) = meta.save_for_project() {
+                        error!("Failed to save recording meta for {path:?}: {err}");
+                    }
                 }
 
                 // Handle upload resumption
@@ -3233,7 +3254,8 @@ async fn resume_uploads(app: AppHandle) -> Result<(), String> {
                                             meta.save_for_project().map_err(|err| error!("Error saving project metadata: {err}")).ok();
                                         }
                                     })
-                                    && let Ok(uploaded_video) = upload_video(
+                                {
+                                    if let Ok(uploaded_video) = upload_video(
                                         &app,
                                         video_id,
                                         file_path,
@@ -3269,6 +3291,7 @@ async fn resume_uploads(app: AppHandle) -> Result<(), String> {
                                             .set_text(uploaded_video.link.clone());
                                         NotificationType::ShareableLinkCopied.send(&app);
                                     }
+                                }
                             });
                         }
                         UploadMeta::Failed { .. } | UploadMeta::Complete => {}
@@ -3337,15 +3360,15 @@ async fn wait_for_recording_ready(app: &AppHandle, path: &Path) -> Result<(), St
         }
     };
 
-    if let Some(studio_meta) = meta.studio_meta()
-        && recording::needs_fragment_remux(path, studio_meta)
-    {
-        info!("Recording needs remux (crash recovery), starting remux...");
-        let path = path.to_path_buf();
-        tokio::task::spawn_blocking(move || recording::remux_fragmented_recording(&path))
-            .await
-            .map_err(|e| format!("Remux task panicked: {e}"))??;
-        info!("Crash recovery remux completed");
+    if let Some(studio_meta) = meta.studio_meta() {
+        if recording::needs_fragment_remux(path, studio_meta) {
+            info!("Recording needs remux (crash recovery), starting remux...");
+            let path = path.to_path_buf();
+            tokio::task::spawn_blocking(move || recording::remux_fragmented_recording(&path))
+                .await
+                .map_err(|e| format!("Remux task panicked: {e}"))??;
+            info!("Crash recovery remux completed");
+        }
     }
 
     Ok(())

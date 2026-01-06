@@ -12,6 +12,7 @@ import {
 	For,
 	Show,
 } from "solid-js";
+import { t } from "~/components/I18nProvider";
 import type { BackgroundSource } from "~/utils/tauri";
 import IconCapBgBlur from "~icons/cap/bg-blur";
 import IconCapCircleX from "~icons/cap/circle-x";
@@ -26,12 +27,12 @@ import { useScreenshotEditorContext } from "../context";
 import { EditorButton, Field, Slider } from "../ui";
 
 // Constants
-const BACKGROUND_SOURCES = {
-	wallpaper: "Wallpaper",
-	image: "Image",
-	color: "Color",
-	gradient: "Gradient",
-} satisfies Record<BackgroundSource["type"], string>;
+const BACKGROUND_SOURCES = () => ({
+	wallpaper: t("screenshotEditor.background.sources.wallpaper"),
+	image: t("screenshotEditor.background.sources.image"),
+	color: t("screenshotEditor.background.sources.color"),
+	gradient: t("screenshotEditor.background.sources.gradient"),
+} satisfies Record<BackgroundSource["type"], string>);
 
 const BACKGROUND_SOURCES_LIST = [
 	"wallpaper",
@@ -113,13 +114,13 @@ const WALLPAPER_NAMES = [
 
 type WallpaperName = (typeof WALLPAPER_NAMES)[number];
 
-const BACKGROUND_THEMES = {
-	macOS: "macOS",
-	dark: "Dark",
-	blue: "Blue",
-	purple: "Purple",
-	orange: "Orange",
-};
+const BACKGROUND_THEMES = () => ({
+	macOS: t("screenshotEditor.background.themes.macOS"),
+	dark: t("screenshotEditor.background.themes.dark"),
+	blue: t("screenshotEditor.background.themes.blue"),
+	purple: t("screenshotEditor.background.themes.purple"),
+	orange: t("screenshotEditor.background.themes.orange"),
+});
 
 export function BackgroundSettingsPopover() {
 	const {
@@ -134,7 +135,7 @@ export function BackgroundSettingsPopover() {
 
 	// Background tabs
 	const [backgroundTab, setBackgroundTab] =
-		createSignal<keyof typeof BACKGROUND_THEMES>("macOS");
+		createSignal<keyof ReturnType<typeof BACKGROUND_THEMES>>("macOS");
 
 	const [wallpapers] = createResource(async () => {
 		// Only load visible wallpapers initially
@@ -208,7 +209,7 @@ export function BackgroundSettingsPopover() {
 			<Popover.Trigger
 				as={EditorButton}
 				leftIcon={<IconCapImage class="size-4" />}
-				tooltipText="Background"
+				tooltipText={t("screenshotEditor.background.title")}
 				kbd={["B"]}
 			/>
 			<Popover.Portal>
@@ -219,7 +220,7 @@ export function BackgroundSettingsPopover() {
 					>
 						<Field
 							icon={<IconCapImage class="size-4" />}
-							name="Background Image"
+							name={t("screenshotEditor.background.image")}
 						>
 							<KTabs
 								value={project.background.source.type}
@@ -271,7 +272,7 @@ export function BackgroundSettingsPopover() {
 													class="z-10 flex-1 py-2.5 px-2 text-xs text-gray-11  ui-selected:border-gray-3 ui-selected:bg-gray-3 ui-not-selected:hover:border-gray-7 rounded-[10px] transition-colors duration-200 outline-none border ui-selected:text-gray-12 peer"
 													value={item}
 												>
-													{BACKGROUND_SOURCES[item]}
+													{BACKGROUND_SOURCES()[item]}
 												</KTabs.Trigger>
 											);
 										}}
@@ -286,12 +287,12 @@ export function BackgroundSettingsPopover() {
 										value={backgroundTab()}
 									>
 										<KTabs.List class="flex overflow-x-auto overscroll-contain relative z-10 flex-row gap-2 items-center mb-3 text-xs hide-scroll">
-											<For each={Object.entries(BACKGROUND_THEMES)}>
+											<For each={Object.entries(BACKGROUND_THEMES())}>
 												{([key, value]) => (
 													<KTabs.Trigger
 														onClick={() =>
 															setBackgroundTab(
-																key as keyof typeof BACKGROUND_THEMES,
+																key as keyof ReturnType<typeof BACKGROUND_THEMES>,
 															)
 														}
 														value={key}
@@ -308,10 +309,10 @@ export function BackgroundSettingsPopover() {
 										value={
 											project.background.source.type === "wallpaper"
 												? (wallpapers()?.find((w) =>
-														(
-															project.background.source as { path?: string }
-														).path?.includes(w.id),
-													)?.url ?? undefined)
+													(
+														project.background.source as { path?: string }
+													).path?.includes(w.id),
+												)?.url ?? undefined)
 												: undefined
 										}
 										onChange={(photoUrl) => {
@@ -360,7 +361,7 @@ export function BackgroundSettingsPopover() {
 											>
 												<IconCapImage class="text-gray-11 size-6" />
 												<span class="text-gray-12">
-													Click to select or drag and drop image
+													{t("screenshotEditor.background.selectImage")}
 												</span>
 											</button>
 										}
@@ -525,7 +526,7 @@ export function BackgroundSettingsPopover() {
 							</KTabs>
 						</Field>
 
-						<Field name="Background Blur" icon={<IconCapBgBlur />}>
+						<Field name={t("screenshotEditor.background.blur")} icon={<IconCapBgBlur />}>
 							<Slider
 								value={[project.background.blur]}
 								onChange={(v) => setProject("background", "blur", v[0])}

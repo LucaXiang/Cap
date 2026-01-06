@@ -368,13 +368,14 @@ impl OutputLatencyEstimator {
             return;
         }
 
-        if let Some(prev_raw) = self.last_raw_latency_secs
-            && self.update_count < WARMUP_GUARD_SAMPLES as u64
-            && clamped > prev_raw * WARMUP_SPIKE_RATIO
-        {
-            self.last_raw_latency_secs = Some(clamped);
-            self.update_count = self.update_count.saturating_add(1);
-            return;
+        if let Some(prev_raw) = self.last_raw_latency_secs {
+            if self.update_count < WARMUP_GUARD_SAMPLES as u64
+                && clamped > prev_raw * WARMUP_SPIKE_RATIO
+            {
+                self.last_raw_latency_secs = Some(clamped);
+                self.update_count = self.update_count.saturating_add(1);
+                return;
+            }
         }
 
         let now = Instant::now();
@@ -616,10 +617,10 @@ mod macos {
         let mut max_latency = 0u32;
 
         for stream in streams {
-            if is_input_stream(&stream)?
-                && let Ok(latency) = stream.latency()
-            {
-                max_latency = max_latency.max(latency);
+            if is_input_stream(&stream)? {
+                if let Ok(latency) = stream.latency() {
+                    max_latency = max_latency.max(latency);
+                }
             }
         }
 
@@ -707,10 +708,10 @@ mod macos {
         let mut max_latency = 0u32;
 
         for stream in streams {
-            if is_output_stream(&stream)?
-                && let Ok(latency) = stream.latency()
-            {
-                max_latency = max_latency.max(latency);
+            if is_output_stream(&stream)? {
+                if let Ok(latency) = stream.latency() {
+                    max_latency = max_latency.max(latency);
+                }
             }
         }
 

@@ -24,6 +24,11 @@ import { createOptionsQuery } from "~/utils/queries";
 import type { DisplayId } from "~/utils/tauri";
 import { emitTo } from "~/utils/tauriSpectaHack";
 import IconLucideExpand from "~icons/lucide/expand";
+import IconLucideCheck from "~icons/lucide/check";
+import IconLucideRotateCcw from "~icons/lucide/rotate-ccw";
+import IconLucideX from "~icons/lucide/x";
+import IconLucideRatio from "~icons/lucide/ratio";
+import { t } from "~/components/I18nProvider";
 
 const MIN_SIZE = { width: 150, height: 150 };
 
@@ -191,7 +196,7 @@ export default function CaptureArea() {
 							classList={{ "flex-row-reverse": ostype() === "windows" }}
 						>
 							<button
-								title="Close"
+								title={t("recording.captureArea.close")}
 								class="group flex items-center justify-center size-12 text-gray-11 shadow-xl shadow-black/30 bg-gray-1 border border-gray-5 hover:bg-gray-4 active:bg-gray-6 rounded-full transition-colors duration-200 cursor-default"
 								type="button"
 								onClick={close}
@@ -201,7 +206,7 @@ export default function CaptureArea() {
 							<div class="flex items-center h-full gap-2">
 								<div class="flex items-center justify-between gap-1 px-[3px] size-full shadow-xl shadow-black/30 bg-gray-1 border border-gray-5 rounded-full">
 									<button
-										title="Reset"
+										title={t("recording.captureArea.reset")}
 										type="button"
 										class="group flex items-center justify-center size-10 text-gray-11 hover:bg-gray-5 active:bg-gray-6 rounded-full transition-colors duration-200 cursor-default"
 										onClick={reset}
@@ -210,7 +215,7 @@ export default function CaptureArea() {
 									</button>
 									<div class="inline-block my-3 w-[1px] self-stretch bg-gray-3" />
 									<button
-										title="Fill"
+										title={t("recording.captureArea.fill")}
 										class="group flex items-center justify-center size-10 text-gray-11 hover:bg-gray-5 active:bg-gray-6 rounded-full transition-colors duration-200 cursor-default"
 										type="button"
 										onClick={() => cropperRef?.fill()}
@@ -219,7 +224,7 @@ export default function CaptureArea() {
 									</button>
 									<div class="inline-block my-3 w-[1px] self-stretch bg-gray-3" />
 									<button
-										title="Aspect Ratio"
+										title={t("recording.captureArea.aspectRatio")}
 										class="group flex items-center justify-center size-10 text-gray-11 hover:bg-gray-5 active:bg-gray-6 rounded-full transition-colors duration-200 cursor-default"
 										type="button"
 										onMouseDown={showCropOptionsMenu}
@@ -263,7 +268,7 @@ export default function CaptureArea() {
 											}}
 										>
 											<IconLucideCheck class="size-5 *:pointer-events-none" />
-											<span class="font-medium text-sm">Confirm</span>
+											<span class="font-medium text-sm">{t("recording.captureArea.confirm")}</span>
 										</div>
 									</button>
 								</div>
@@ -273,7 +278,7 @@ export default function CaptureArea() {
 				</Transition>
 			</div>
 
-			<SelectionHint show={showSelectionHint()} />
+			<SelectionHint show={showSelectionHint()} message={t("recording.captureArea.selectionHint")} />
 
 			<Transition
 				appear

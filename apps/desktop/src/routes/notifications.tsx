@@ -1,6 +1,7 @@
 import toast, { Toaster } from "solid-toast";
 import { createTauriEventListener } from "~/utils/createEventListener";
 import { events } from "~/utils/tauri";
+import { t } from "~/components/I18nProvider";
 
 export default function Page() {
 	let _unlisten: (() => void) | undefined;
@@ -32,8 +33,14 @@ export default function Page() {
 	);
 
 	createTauriEventListener(events.newNotification, (payload) => {
+		const title = t(payload.title) || payload.title;
+		const body = t(payload.body) || payload.body;
+
+		// Combine title and body if they are different and title is not empty
+		const message = title && title !== body ? `${title}: ${body}` : body;
+
 		if (payload.is_error) {
-			toast.error(payload.body, {
+			toast.error(message, {
 				style: {
 					background: "#FEE2E2",
 					color: "#991B1B",
@@ -45,7 +52,7 @@ export default function Page() {
 				},
 			});
 		} else {
-			toast.success(payload.body, {
+			toast.success(message, {
 				icon: <SuccessIcon />,
 				style: {
 					background: "#FFFFFF",

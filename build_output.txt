@@ -1,0 +1,37 @@
+﻿cargo :    Compiling ffmpeg-sys-next v7.1.3
+所在位置 行:1 字符: 145
++ ... ps\desktop\src-tauri; cargo build --message-format
+=short 2>&1 | Out-F ...
++                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (   Compili 
+   ng ffmpeg-sys-next v7.1.3:String) [], RemoteExcepti  
+  on
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+   Compiling symphonia-core v0.5.4
+   Compiling futures-intrusive v0.5.0
+   Compiling bezier_easing v0.1.1
+   Compiling sysinfo v0.32.1
+   Compiling minidumper v0.8.3
+   Compiling whisper-rs-sys v0.9.0
+   Compiling prost v0.14.1
+   Compiling tauri-plugin-deep-link v2.4.3
+   Compiling hyper v0.14.32
+   Compiling cap-camera-windows v0.1.0 (C:\Users\DELL\De
+sktop\CAP褰曞睆杞欢\Cap\crates\camera-windows)
+   Compiling directories v5.0.1
+   Compiling clipboard-win v5.4.1
+   Compiling image v0.24.9
+error: failed to run custom build command for `ffmpeg-sy
+s-next v7.1.3`
+note: To improve backtraces for build dependencies, set 
+the CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG=true environm
+ent variable to enable debug information generation.
+
+Caused by:
+  process didn't exit successfully: `C:\Users\DELL\Deskt
+op\CAP褰曞睆杞欢\Cap\target\debug\build\ffmpeg-sys-next-6814
+c1ef19fa30b4\build-script-build` (exit code: 101)
+warning: build failed, waiting for other jobs to finish.
+..

@@ -14,6 +14,7 @@ import {
 } from "solid-js";
 import { produce } from "solid-js/store";
 import { commands } from "~/utils/tauri";
+import { t } from "~/components/I18nProvider";
 import { useEditorContext } from "../context";
 import {
 	useSegmentContext,
@@ -149,7 +150,7 @@ export function ZoomTrack(props: {
 					items: [
 						{
 							id: "generateZoomSegments",
-							text: "Generate zoom segments from clicks",
+							text: t("editor.timeline.zoom.generate"),
 							action: handleGenerateZoomSegments,
 						},
 					],
@@ -270,9 +271,9 @@ export function ZoomTrack(props: {
 				when={project.timeline?.zoomSegments}
 				fallback={
 					<div class="text-center text-sm text-[--text-tertiary] flex flex-col justify-center items-center inset-0 w-full bg-gray-3/20 dark:bg-gray-3/10 hover:bg-gray-3/30 dark:hover:bg-gray-3/20 transition-colors rounded-xl pointer-events-none">
-						<div>Click to add zoom segment</div>
+						<div>{t("editor.timeline.zoom.placeholder")}</div>
 						<div class="text-[10px] text-[--text-tertiary]/40 mt-0.5">
-							(Smoothly zoom in on important areas)
+							{t("editor.timeline.zoom.description")}
 						</div>
 					</div>
 				}
@@ -542,7 +543,7 @@ export function ZoomTrack(props: {
 												</Match>
 												<Match when={true}>
 													<div class="flex flex-col gap-1 justify-center items-center text-xs whitespace-nowrap text-gray-1 dark:text-gray-12 animate-in fade-in">
-														<span class="opacity-70">Zoom</span>
+														<span class="opacity-70">{t("editor.timeline.zoom.label")}</span>
 														<div class="flex gap-1 items-center text-md">
 															<IconLucideSearch class="size-3.5" />
 															{zoomPercentage()}

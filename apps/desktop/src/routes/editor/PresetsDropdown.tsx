@@ -2,6 +2,7 @@ import { DropdownMenu as KDropdownMenu } from "@kobalte/core/dropdown-menu";
 import { cx } from "cva";
 import { createSignal, For, Show, Suspense } from "solid-js";
 import { reconcile } from "solid-js/store";
+import { t } from "~/components/I18nProvider";
 import { normalizeProject, useEditorContext } from "./context";
 import {
 	DropdownItem,
@@ -22,7 +23,7 @@ export function PresetsDropdown() {
 				leftIcon={<IconCapPresets />}
 				rightIcon={<IconCapChevronDown />}
 			>
-				Presets
+				{t("editor.presets.title")}
 			</EditorButton>
 			<KDropdownMenu.Portal>
 				<Suspense>
@@ -38,7 +39,7 @@ export function PresetsDropdown() {
 								each={presets.query.data?.presets ?? []}
 								fallback={
 									<div class="py-1 w-full text-sm text-center text-gray-11">
-										No Presets
+										{t("editor.presets.none")}
 									</div>
 								}
 							>
@@ -68,7 +69,7 @@ export function PresetsDropdown() {
 												<span class="mr-auto">{preset.name}</span>
 												<Show when={presets.query.data?.default === i()}>
 													<span class="px-2 py-1 text-[11px] rounded-full bg-gray-2 text-gray-11">
-														Default
+														{t("editor.presets.default")}
 													</span>
 												</Show>
 												<button
@@ -100,12 +101,12 @@ export function PresetsDropdown() {
 																applyPreset();
 															}}
 														>
-															Apply
+															{t("editor.presets.apply")}
 														</DropdownItem>
 														<DropdownItem
 															onSelect={() => presets.setDefault(i())}
 														>
-															Set as default
+															{t("editor.presets.setDefault")}
 														</DropdownItem>
 														<DropdownItem
 															onSelect={() =>
@@ -116,7 +117,7 @@ export function PresetsDropdown() {
 																})
 															}
 														>
-															Rename
+															{t("editor.presets.rename")}
 														</DropdownItem>
 														<DropdownItem
 															onClick={() =>
@@ -127,7 +128,7 @@ export function PresetsDropdown() {
 																})
 															}
 														>
-															Delete
+															{t("editor.presets.delete")}
 														</DropdownItem>
 													</MenuItemList>
 												)}
@@ -144,7 +145,7 @@ export function PresetsDropdown() {
 							<DropdownItem
 								onSelect={() => setDialog({ type: "createPreset", open: true })}
 							>
-								<span>Create new preset</span>
+								<span>{t("editor.presets.create")}</span>
 								<IconCapCirclePlus class="ml-auto" />
 							</DropdownItem>
 						</MenuItemList>

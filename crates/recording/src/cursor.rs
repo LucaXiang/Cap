@@ -48,14 +48,14 @@ fn flush_cursor_data(output_path: &Path, moves: &[CursorMoveEvent], clicks: &[Cu
         clicks: clicks.to_vec(),
         moves: moves.to_vec(),
     };
-    if let Ok(json) = serde_json::to_string_pretty(&events)
-        && let Err(e) = std::fs::write(output_path, json)
-    {
-        tracing::error!(
-            "Failed to write cursor data to {}: {}",
-            output_path.display(),
-            e
-        );
+    if let Ok(json) = serde_json::to_string_pretty(&events) {
+        if let Err(e) = std::fs::write(output_path, json) {
+            tracing::error!(
+                "Failed to write cursor data to {}: {}",
+                output_path.display(),
+                e
+            );
+        }
     }
 }
 
@@ -203,11 +203,11 @@ pub fn spawn_cursor_recorder(
 
             last_mouse_state = mouse_state;
 
-            if let Some(ref path) = output_path
-                && last_flush.elapsed() >= flush_interval
-            {
-                flush_cursor_data(path, &response.moves, &response.clicks);
-                last_flush = Instant::now();
+            if let Some(ref path) = output_path {
+                if last_flush.elapsed() >= flush_interval {
+                    flush_cursor_data(path, &response.moves, &response.clicks);
+                    last_flush = Instant::now();
+                }
             }
         }
 

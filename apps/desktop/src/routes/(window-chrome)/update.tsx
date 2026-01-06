@@ -4,6 +4,7 @@ import { getCurrentWindow, UserAttentionType } from "@tauri-apps/api/window";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
 import { createResource, Match, Show, Switch } from "solid-js";
+import { t } from "~/components/I18nProvider";
 
 export default function () {
 	const navigate = useNavigate();
@@ -20,7 +21,7 @@ export default function () {
 			<Show
 				when={update()}
 				fallback={
-					<span class="text-[--text-tertiary]">No update available</span>
+					<span class="text-[--text-tertiary]">{t("update.noUpdate")}</span>
 				}
 				keyed
 			>
@@ -75,9 +76,9 @@ export default function () {
 								<Match when={updateStatus()?.type === "done"}>
 									<div class="flex flex-col gap-4 items-center">
 										<p class="text-[--text-tertiary]">
-											Update has been installed. Restart Cap to finish updating.
+											{t("update.done")}
 										</p>
-										<Button onClick={() => relaunch()}>Restart Now</Button>
+										<Button onClick={() => relaunch()}>{t("update.restartNow")}</Button>
 									</div>
 								</Match>
 								<Match
@@ -94,7 +95,7 @@ export default function () {
 									{(status) => (
 										<>
 											<h1 class="text-[--text-primary] mb-4">
-												Installing Update
+												{t("update.installing")}
 											</h1>
 
 											<div class="w-full bg-gray-3 rounded-full h-2.5">
@@ -104,7 +105,7 @@ export default function () {
 														width: `${Math.min(
 															((status()?.progress ?? 0) /
 																(status()?.contentLength ?? 0)) *
-																100,
+															100,
 															100,
 														)}%`,
 													}}

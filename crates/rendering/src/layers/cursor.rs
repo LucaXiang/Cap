@@ -356,35 +356,39 @@ impl CursorLayer {
                     _ => None,
                 };
 
-                if let Some(cursor_shape) = cursor_shape
-                    && uniforms.project.cursor.use_svg
-                    && let Some(info) = cursor_shape.resolve()
-                {
-                    loaded_cursor =
-                        CursorTexture::prepare_svg(constants, info.raw, info.hotspot.into())
-                            .map_err(|err| {
-                                error!(
-                                    "Error loading SVG cursor {:?}: {err}",
-                                    interpolated_cursor.cursor_id
-                                )
-                            })
-                            .ok();
+                if let Some(cursor_shape) = cursor_shape {
+                    if uniforms.project.cursor.use_svg {
+                        if let Some(info) = cursor_shape.resolve() {
+                            loaded_cursor =
+                                CursorTexture::prepare_svg(constants, info.raw, info.hotspot.into())
+                                    .map_err(|err| {
+                                        error!(
+                                            "Error loading SVG cursor {:?}: {err}",
+                                            interpolated_cursor.cursor_id
+                                        )
+                                    })
+                                    .ok();
+                        }
+                    }
                 }
 
-                if let StudioRecordingMeta::MultipleSegments { inner, .. } = &constants.meta
-                    && loaded_cursor.is_none()
-                    && let Some(c) = inner
-                        .get_cursor_image(&constants.recording_meta, &interpolated_cursor.cursor_id)
-                    && let Ok(img) = image::open(&c.path).map_err(|err| {
-                        error!("Failed to load cursor image from {:?}: {err}", c.path)
-                    })
-                {
-                    loaded_cursor = Some(CursorTexture::prepare(
-                        constants,
-                        &img.to_rgba8(),
-                        img.dimensions(),
-                        c.hotspot,
-                    ));
+                if let StudioRecordingMeta::MultipleSegments { inner, .. } = &constants.meta {
+                    if loaded_cursor.is_none() {
+                        if let Some(c) = inner
+                            .get_cursor_image(&constants.recording_meta, &interpolated_cursor.cursor_id)
+                        {
+                            if let Ok(img) = image::open(&c.path).map_err(|err| {
+                                error!("Failed to load cursor image from {:?}: {err}", c.path)
+                            }) {
+                                loaded_cursor = Some(CursorTexture::prepare(
+                                    constants,
+                                    &img.to_rgba8(),
+                                    img.dimensions(),
+                                    c.hotspot,
+                                ));
+                            }
+                        }
+                    }
                 }
 
                 if let Some(c) = loaded_cursor {
@@ -642,16 +646,14 @@ fn get_click_t(clicks: &[CursorClickEvent], time_ms: f64) -> f32 {
         );
     }
 
-    if let Some(next) = clicks.get(prev_i + 1)
-        && !prev.down
-        && next.down
-        && next.time_ms - time_ms <= CURSOR_CLICK_DURATION_MS
-    {
-        return smoothstep(
-            0.0,
-            CURSOR_CLICK_DURATION_MS as f32,
-            (time_ms - next.time_ms).abs() as f32,
-        );
+    if let Some(next) = clicks.get(prev_i + 1) {
+        if !prev.down && next.down && next.time_ms - time_ms <= CURSOR_CLICK_DURATION_MS {
+            return smoothstep(
+                0.0,
+                CURSOR_CLICK_DURATION_MS as f32,
+                (time_ms - next.time_ms).abs() as f32,
+            );
+        }
     }
 
     1.0

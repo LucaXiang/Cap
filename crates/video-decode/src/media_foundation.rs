@@ -92,13 +92,13 @@ fn query_mf_decoder_capabilities(device: &ID3D11Device) -> MFDecoderCapabilities
                 OutputFormat: DXGI_FORMAT_NV12,
             };
 
-            if let Ok(config_count) = unsafe { video_device.GetVideoDecoderConfigCount(&h264_desc) }
-                && config_count > 0
-            {
-                supports_h264 = true;
-                max_width = max_width.max(test_w);
-                max_height = max_height.max(test_h);
-                break;
+            if let Ok(config_count) = unsafe { video_device.GetVideoDecoderConfigCount(&h264_desc) } {
+                if config_count > 0 {
+                    supports_h264 = true;
+                    max_width = max_width.max(test_w);
+                    max_height = max_height.max(test_h);
+                    break;
+                }
             }
         }
 
@@ -110,13 +110,13 @@ fn query_mf_decoder_capabilities(device: &ID3D11Device) -> MFDecoderCapabilities
                 OutputFormat: DXGI_FORMAT_NV12,
             };
 
-            if let Ok(config_count) = unsafe { video_device.GetVideoDecoderConfigCount(&hevc_desc) }
-                && config_count > 0
-            {
-                supports_hevc = true;
-                max_width = max_width.max(test_w);
-                max_height = max_height.max(test_h);
-                break;
+            if let Ok(config_count) = unsafe { video_device.GetVideoDecoderConfigCount(&hevc_desc) } {
+                if config_count > 0 {
+                    supports_hevc = true;
+                    max_width = max_width.max(test_w);
+                    max_height = max_height.max(test_h);
+                    break;
+                }
             }
         }
 
@@ -743,10 +743,10 @@ impl MediaFoundationDecoder {
     }
 
     pub fn recycle_textures(&mut self, textures: Arc<FrameTextures>) {
-        if Arc::strong_count(&textures) == 1
-            && let Ok(textures) = Arc::try_unwrap(textures)
-        {
-            self.frame_pool.recycle(textures);
+        if Arc::strong_count(&textures) == 1 {
+            if let Ok(textures) = Arc::try_unwrap(textures) {
+                self.frame_pool.recycle(textures);
+            }
         }
     }
 

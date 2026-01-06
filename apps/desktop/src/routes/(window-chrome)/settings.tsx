@@ -6,6 +6,7 @@ import "@total-typescript/ts-reset/filter-boolean";
 import { createResource, For, onMount, Show, Suspense } from "solid-js";
 import { CapErrorBoundary } from "~/components/CapErrorBoundary";
 import { SignInButton } from "~/components/SignInButton";
+import { t } from "~/components/I18nProvider";
 
 import { authStore } from "~/store";
 import { trackEvent } from "~/utils/analytics";
@@ -39,47 +40,43 @@ export default function Settings(props: RouteSectionProps) {
 						each={[
 							{
 								href: "general",
-								name: "General",
+								name: t('nav.general'),
 								icon: IconCapSettings,
 							},
 							{
 								href: "hotkeys",
-								name: "Shortcuts",
+								name: t('nav.shortcuts'),
 								icon: IconCapHotkeys,
 							},
 							{
 								href: "recordings",
-								name: "Recordings",
+								name: t('nav.recordings'),
 								icon: IconLucideSquarePlay,
 							},
 							{
 								href: "screenshots",
-								name: "Screenshots",
+								name: t('nav.screenshots'),
 								icon: IconLucideImage,
 							},
-							{
-								href: "integrations",
-								name: "Integrations",
-								icon: IconLucideUnplug,
-							},
-							{
-								href: "license",
-								name: "License",
-								icon: IconLucideGift,
-							},
+							// {
+							// 	href: "integrations",
+							// 	name: t('nav.integrations'),
+							// 	icon: IconLucideUnplug,
+							// },
+
 							{
 								href: "experimental",
-								name: "Experimental",
+								name: t('nav.experimental'),
 								icon: IconCapSettings,
 							},
 							{
 								href: "feedback",
-								name: "Feedback",
+								name: t('nav.feedback'),
 								icon: IconLucideMessageSquarePlus,
 							},
 							{
 								href: "changelog",
-								name: "Changelog",
+								name: t('nav.changelog'),
 								icon: IconLucideBell,
 							},
 						].filter(Boolean)}
@@ -102,17 +99,7 @@ export default function Settings(props: RouteSectionProps) {
 					<Show when={version()}>
 						{(v) => <p class="mb-2 text-xs text-gray-11">v{v()}</p>}
 					</Show>
-					{auth.data ? (
-						<Button
-							onClick={handleAuth}
-							variant={auth.data ? "gray" : "dark"}
-							class="w-full"
-						>
-							Sign Out
-						</Button>
-					) : (
-						<SignInButton>Sign In</SignInButton>
-					)}
+					{/* Sign In/Out buttons hidden for local use */}
 				</div>
 			</div>
 			<div class="overflow-y-hidden flex-1 animate-in">

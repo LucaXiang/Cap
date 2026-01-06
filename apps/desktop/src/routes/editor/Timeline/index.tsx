@@ -16,6 +16,7 @@ import "./styles.css";
 
 import Tooltip from "~/components/Tooltip";
 import { commands } from "~/utils/tauri";
+import { t } from "~/components/I18nProvider";
 import { FPS, type TimelineTrackType, useEditorContext } from "../context";
 import { formatTime } from "../utils";
 import { ClipTrack } from "./ClipTrack";
@@ -48,31 +49,31 @@ type TrackDefinition = {
 const trackDefinitions: TrackDefinition[] = [
 	{
 		type: "clip",
-		label: "Clip",
+		label: t("editor.timeline.clip.label"),
 		icon: trackIcons.clip,
 		locked: true,
 	},
 	{
 		type: "text",
-		label: "Text",
+		label: t("editor.timeline.text.label"),
 		icon: trackIcons.text,
 		locked: false,
 	},
 	{
 		type: "mask",
-		label: "Mask",
+		label: t("editor.timeline.mask.label"),
 		icon: trackIcons.mask,
 		locked: false,
 	},
 	{
 		type: "zoom",
-		label: "Zoom",
+		label: t("editor.timeline.zoom.label"),
 		icon: trackIcons.zoom,
 		locked: true,
 	},
 	{
 		type: "scene",
-		label: "Scene",
+		label: t("editor.timeline.scene.label"),
 		icon: trackIcons.scene,
 		locked: false,
 	},
@@ -384,17 +385,15 @@ export function Timeline() {
 		// 0px to LEFT_OFFSET: Always black (icons area)
 		// LEFT_OFFSET: Starts fading. If strength is 0 (start), it's black. If strength is 1, it's transparent.
 		// LEFT_OFFSET + FADE_WIDTH: Always black (content fully visible)
-		const leftStops = `black 0px, black ${LEFT_OFFSET}px, ${leftStartColor} ${LEFT_OFFSET}px, black ${
-			LEFT_OFFSET + FADE_WIDTH
-		}px`;
+		const leftStops = `black 0px, black ${LEFT_OFFSET}px, ${leftStartColor} ${LEFT_OFFSET}px, black ${LEFT_OFFSET + FADE_WIDTH
+			}px`;
 
 		// Right stops:
 		// calc(100% - (RIGHT_PADDING + FADE_WIDTH)): Always black (content fully visible)
 		// calc(100% - RIGHT_PADDING): Ends fading. If strength is 0 (end), it's black. If strength is 1, it's transparent.
 		// 100%: Transparent
-		const rightStops = `black calc(100% - ${
-			RIGHT_PADDING + FADE_WIDTH
-		}px), ${rightEndColor} calc(100% - ${RIGHT_PADDING}px), transparent 100%`;
+		const rightStops = `black calc(100% - ${RIGHT_PADDING + FADE_WIDTH
+			}px), ${rightEndColor} calc(100% - ${RIGHT_PADDING}px), transparent 100%`;
 
 		return `linear-gradient(to right, ${leftStops}, ${rightStops})`;
 	};
@@ -470,7 +469,7 @@ export function Timeline() {
 						<TimelineMarkings />
 					</div>
 					<div class="absolute bottom-0">
-						<Tooltip content="Add track">
+						<Tooltip content={t("editor.timeline.addTrack")}>
 							<TrackManager
 								options={trackOptions()}
 								onToggle={handleToggleTrack}
@@ -488,9 +487,8 @@ export function Timeline() {
 								)}
 								style={{
 									left: `${TRACK_GUTTER}px`,
-									transform: `translateX(${
-										(time() - transform().position) / secsPerPixel() - 0.5
-									}px)`,
+									transform: `translateX(${(time() - transform().position) / secsPerPixel() - 0.5
+										}px)`,
 									top: "0px",
 								}}
 							>
@@ -512,7 +510,7 @@ export function Timeline() {
 							left: `${TRACK_GUTTER}px`,
 							transform: `translateX(${Math.min(
 								(editorState.playbackTime - transform().position) /
-									secsPerPixel(),
+								secsPerPixel(),
 								timelineBounds.width ?? 0,
 							)}px)`,
 							top: "0px",

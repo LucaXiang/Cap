@@ -13,6 +13,7 @@ import {
 	Show,
 	Switch,
 } from "solid-js";
+import { t } from "~/components/I18nProvider";
 import { Transition } from "solid-transition-group";
 import {
 	CROP_ZERO,
@@ -217,17 +218,17 @@ function Dialogs() {
 								const existingCrop = cropDialog().currentCrop;
 								const initialBounds = existingCrop
 									? {
-											x: existingCrop.position.x,
-											y: existingCrop.position.y,
-											width: existingCrop.size.x,
-											height: existingCrop.size.y,
-										}
+										x: existingCrop.position.x,
+										y: existingCrop.position.y,
+										width: existingCrop.size.x,
+										height: existingCrop.size.y,
+									}
 									: {
-											x: 0,
-											y: 0,
-											width: originalSize.x,
-											height: originalSize.y,
-										};
+										x: 0,
+										y: 0,
+										width: originalSize.x,
+										height: originalSize.y,
+									};
 
 								const [snapToRatio, setSnapToRatioEnabled] = makePersisted(
 									createSignal(true),
@@ -288,7 +289,7 @@ function Dialogs() {
 										<Dialog.Header>
 											<div class="flex flex-row space-x-[2rem]">
 												<div class="flex flex-row items-center space-x-[0.75rem] text-gray-11">
-													<span>Size</span>
+													<span>{t("common.size")}</span>
 													<div class="w-[3.25rem]">
 														<BoundInput field="width" max={originalSize.x} />
 													</div>
@@ -298,7 +299,7 @@ function Dialogs() {
 													</div>
 												</div>
 												<div class="flex flex-row items-center space-x-[0.75rem] text-gray-11">
-													<span>Position</span>
+													<span>{t("common.position")}</span>
 													<div class="w-[3.25rem]">
 														<BoundInput field="x" />
 													</div>
@@ -349,7 +350,7 @@ function Dialogs() {
 														crop().height === originalSize.y
 													}
 												>
-													Full
+													{t("common.full")}
 												</EditorButton>
 												<EditorButton
 													leftIcon={<IconCapCircleX />}
@@ -364,7 +365,7 @@ function Dialogs() {
 														crop().height === initialBounds.height
 													}
 												>
-													Reset
+													{t("common.reset")}
 												</EditorButton>
 											</div>
 										</Dialog.Header>
@@ -437,7 +438,7 @@ function Dialogs() {
 													setDialog({ open: false });
 												}}
 											>
-												Save
+												{t("common.save")}
 											</Button>
 										</Dialog.Footer>
 									</>

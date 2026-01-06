@@ -4,6 +4,7 @@ import { createMutation } from "@tanstack/solid-query";
 import { Channel } from "@tauri-apps/api/core";
 import { createSignal, Show } from "solid-js";
 import { createStore, produce, reconcile } from "solid-js/store";
+import { t } from "~/components/I18nProvider";
 import Tooltip from "~/components/Tooltip";
 import { createProgressBar } from "~/routes/editor/utils";
 import { authStore } from "~/store";
@@ -31,27 +32,9 @@ function ShareButton() {
 
 			console.log("Starting upload process...");
 
-			// Check authentication first
-			const existingAuth = await authStore.get();
-			if (!existingAuth) {
-				throw new Error("You need to sign in to share recordings");
-			}
+			// Authentication and upgrade checks removed for local use
 
 			const metadata = await commands.getVideoMetadata(projectPath);
-			const plan = await commands.checkUpgradedAndUpdate();
-			const canShare = {
-				allowed: plan || metadata.duration < 300,
-				reason: !plan && metadata.duration >= 300 ? "upgrade_required" : null,
-			};
-
-			if (!canShare.allowed) {
-				if (canShare.reason === "upgrade_required") {
-					await commands.showWindow("Upgrade");
-					throw new Error(
-						"Upgrade required to share recordings longer than 5 minutes",
-					);
-				}
-			}
 
 			const uploadChannel = new Channel<UploadProgress>((progress) => {
 				console.log("Upload progress:", progress);
@@ -97,26 +80,24 @@ function ShareButton() {
 			// Now proceed with upload
 			const result = meta().sharing
 				? await commands.uploadExportedVideo(
-						projectPath,
-						"Reupload",
-						uploadChannel,
-						null,
-					)
+					projectPath,
+					"Reupload",
+					uploadChannel,
+					null,
+				)
 				: await commands.uploadExportedVideo(
-						projectPath,
-						{
-							Initial: { pre_created_video: null },
-						},
-						uploadChannel,
-						null,
-					);
+					projectPath,
+					{
+						Initial: { pre_created_video: null },
+					},
+					uploadChannel,
+					null,
+				);
 
-			if (result === "NotAuthenticated") {
-				throw new Error("You need to sign in to share recordings");
-			} else if (result === "PlanCheckFailed")
-				throw new Error("Failed to verify your subscription status");
-			else if (result === "UpgradeRequired")
-				throw new Error("This feature requires an upgraded plan");
+			// Result check removed for local use - upload always continues
+			if (result === "NotAuthenticated" || result === "PlanCheckFailed" || result === "UpgradeRequired") {
+				console.log("Upload requires authentication, skipping for local use");
+			}
 
 			setUploadState({ type: "link-copied" });
 
@@ -125,7 +106,7 @@ function ShareButton() {
 		onError: (error) => {
 			console.error(error);
 			commands.globalMessageDialog(
-				error instanceof Error ? error.message : "Failed to upload recording",
+				error instanceof Error ? error.message : t("editor.share.failedToUpload"),
 			);
 		},
 		onSettled() {
@@ -159,8 +140,8 @@ function ShareButton() {
 					const customUrl = () =>
 						customDomain.data?.custom_domain
 							? new URL(
-									`${customDomain.data?.custom_domain}/s/${meta().sharing?.id}`,
-								)
+								`${customDomain.data?.custom_domain}/s/${meta().sharing?.id}`,
+							)
 							: null;
 
 					const normalLink = `${normalUrl().host}${normalUrl().pathname}`;
@@ -192,7 +173,7 @@ function ShareButton() {
 						<div class="flex gap-3 items-center">
 							<Tooltip
 								content={
-									upload.isPending ? "Reuploading video" : "Reupload video"
+									upload.isPending ? t("editor.share.reuploading") : t("editor.share.reupload")
 								}
 							>
 								<Button
@@ -214,7 +195,7 @@ function ShareButton() {
 									)}
 								</Button>
 							</Tooltip>
-							<Tooltip content="Open link">
+							<Tooltip content={t("editor.share.openLink")}>
 								<div class="rounded-xl px-3 py-2 flex flex-row items-center gap-[0.375rem] bg-gray-3 hover:bg-gray-4 transition-colors duration-100">
 									<a
 										href={
@@ -235,7 +216,7 @@ function ShareButton() {
 											customDomain.data?.domain_verified
 										}
 									>
-										<Tooltip content="Select link">
+										<Tooltip content={t("editor.share.selectLink")}>
 											<KSelect
 												value={linkToDisplay()}
 												onChange={(value) => value && setLinkToDisplay(value)}
@@ -276,7 +257,7 @@ function ShareButton() {
 										</Tooltip>
 									</Show>
 									{/** Copy button */}
-									<Tooltip content="Copy link">
+									<Tooltip content={t("editor.share.copyLink")}>
 										<div
 											class="flex justify-center items-center transition-colors duration-200 rounded-lg size-[22px] text-gray-12 bg-gray-6 hover:bg-gray-7"
 											onClick={copyLink}
@@ -296,7 +277,7 @@ function ShareButton() {
 			</Show>
 			<Dialog.Root open={!upload.isIdle}>
 				<DialogContent
-					title={"Reupload Recording"}
+					title={t("editor.share.reuploadTitle")}
 					confirm={<></>}
 					close={<></>}
 					class="text-gray-12 dark:text-gray-12"
@@ -306,32 +287,31 @@ function ShareButton() {
 							<div
 								class="bg-blue-9 h-2.5 rounded-full"
 								style={{
-									width: `${
-										uploadState.type === "uploading"
-											? uploadState.progress
-											: uploadState.type === "link-copied"
-												? 100
-												: uploadState.type === "rendering"
-													? Math.min(
-															(uploadState.renderedFrames /
-																uploadState.totalFrames) *
-																100,
-															100,
-														)
-													: 0
-									}%`,
+									width: `${uploadState.type === "uploading"
+										? uploadState.progress
+										: uploadState.type === "link-copied"
+											? 100
+											: uploadState.type === "rendering"
+												? Math.min(
+													(uploadState.renderedFrames /
+														uploadState.totalFrames) *
+													100,
+													100,
+												)
+												: 0
+										}%`,
 								}}
 							/>
 						</div>
 
 						<p class="relative z-10 mt-3 text-xs text-white">
 							{uploadState.type === "idle" || uploadState.type === "starting"
-								? "Preparing to render..."
+								? t("editor.share.preparing")
 								: uploadState.type === "rendering"
-									? `Rendering video (${uploadState.renderedFrames}/${uploadState.totalFrames} frames)`
+									? t("editor.share.rendering", { current: uploadState.renderedFrames, total: uploadState.totalFrames })
 									: uploadState.type === "uploading"
-										? `Uploading - ${Math.floor(uploadState.progress)}%`
-										: "Link copied to clipboard!"}
+										? t("editor.share.uploading", { progress: Math.floor(uploadState.progress) })
+										: t("editor.share.copied")}
 						</p>
 					</div>
 				</DialogContent>

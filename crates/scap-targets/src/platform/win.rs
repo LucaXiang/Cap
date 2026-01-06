@@ -535,16 +535,16 @@ impl WindowImpl {
             // Target size for acceptable icon quality - early termination threshold
             const GOOD_SIZE_THRESHOLD: i32 = 256;
 
-            if let Some(exe_path) = self.get_executable_path()
-                && let Some(icon_data) = self.extract_shell_icon_high_res(&exe_path, 512)
-            {
-                return Some(icon_data);
+            if let Some(exe_path) = self.get_executable_path() {
+                if let Some(icon_data) = self.extract_shell_icon_high_res(&exe_path, 512) {
+                    return Some(icon_data);
+                }
             }
 
-            if let Some(exe_path) = self.get_executable_path()
-                && let Some(icon_data) = self.extract_executable_icons_high_res(&exe_path)
-            {
-                return Some(icon_data);
+            if let Some(exe_path) = self.get_executable_path() {
+                if let Some(icon_data) = self.extract_executable_icons_high_res(&exe_path) {
+                    return Some(icon_data);
+                }
             }
 
             // Method 3: Try to get the window's large icon
@@ -555,11 +555,12 @@ impl WindowImpl {
                 Some(LPARAM(0isize)),
             ); // ICON_BIG = 1
 
-            if large_icon.0 != 0
-                && let Some(result) = self.hicon_to_png_bytes_optimized(HICON(large_icon.0 as _))
-                && result.1 >= GOOD_SIZE_THRESHOLD
-            {
-                return Some(result.0);
+            if large_icon.0 != 0 {
+                if let Some(result) = self.hicon_to_png_bytes_optimized(HICON(large_icon.0 as _)) {
+                    if result.1 >= GOOD_SIZE_THRESHOLD {
+                        return Some(result.0);
+                    }
+                }
             }
 
             // Method 4: Try executable file extraction (fallback to original method)
@@ -613,17 +614,17 @@ impl WindowImpl {
                 Some(LPARAM(0isize)),
             ); // ICON_SMALL = 0
 
-            if small_icon.0 != 0
-                && let Some(result) = self.hicon_to_png_bytes_optimized(HICON(small_icon.0 as _))
-            {
-                return Some(result.0);
+            if small_icon.0 != 0 {
+                if let Some(result) = self.hicon_to_png_bytes_optimized(HICON(small_icon.0 as _)) {
+                    return Some(result.0);
+                }
             }
 
             let class_icon = GetClassLongPtrW(self.0, GCLP_HICON) as isize;
-            if class_icon != 0
-                && let Some(result) = self.hicon_to_png_bytes_optimized(HICON(class_icon as _))
-            {
-                return Some(result.0);
+            if class_icon != 0 {
+                if let Some(result) = self.hicon_to_png_bytes_optimized(HICON(class_icon as _)) {
+                    return Some(result.0);
+                }
             }
 
             None
@@ -714,14 +715,14 @@ impl WindowImpl {
                     let icon_result = self.hicon_to_png_bytes_optimized(icon_handle);
                     let _ = DestroyIcon(icon_handle);
 
-                    if let Some((png_data, realized_size)) = icon_result
-                        && realized_size > best_size
-                    {
-                        best_size = realized_size;
-                        best_icon = Some(png_data);
+                    if let Some((png_data, realized_size)) = icon_result {
+                        if realized_size > best_size {
+                            best_size = realized_size;
+                            best_icon = Some(png_data);
 
-                        if best_size >= 256 {
-                            return best_icon;
+                            if best_size >= 256 {
+                                return best_icon;
+                            }
                         }
                     }
                 }
@@ -1115,11 +1116,12 @@ impl WindowImpl {
             return false;
         }
 
-        if let Ok(exe_path) = unsafe { pid_to_exe_path(id) }
-            && let Some(exe_name) = exe_path.file_name().and_then(|n| n.to_str())
-            && IGNORED_EXES.contains(&&*exe_name.to_lowercase())
-        {
-            return false;
+        if let Ok(exe_path) = unsafe { pid_to_exe_path(id) } {
+            if let Some(exe_name) = exe_path.file_name().and_then(|n| n.to_str()) {
+                if IGNORED_EXES.contains(&&*exe_name.to_lowercase()) {
+                    return false;
+                }
+            }
         }
 
         let mut rect = RECT::default();
@@ -1159,11 +1161,12 @@ fn is_window_valid_for_enumeration(hwnd: HWND, current_process_id: u32) -> bool 
             return false;
         }
 
-        if let Ok(exe_path) = pid_to_exe_path(process_id)
-            && let Some(exe_name) = exe_path.file_name().and_then(|n| n.to_str())
-            && IGNORED_EXES.contains(&&*exe_name.to_lowercase())
-        {
-            return false;
+        if let Ok(exe_path) = pid_to_exe_path(process_id) {
+            if let Some(exe_name) = exe_path.file_name().and_then(|n| n.to_str()) {
+                if IGNORED_EXES.contains(&&*exe_name.to_lowercase()) {
+                    return false;
+                }
+            }
         }
 
         true
@@ -1186,15 +1189,15 @@ fn is_window_valid_for_topmost_selection(
             return false;
         }
 
-        if let Ok(exe_path) = pid_to_exe_path(process_id)
-            && let Some(exe_name) = exe_path.file_name().and_then(|n| n.to_str())
-        {
-            let exe_name_lower = exe_name.to_lowercase();
-            if exe_name_lower.contains("webview2")
-                || exe_name_lower.contains("msedgewebview2")
-                || exe_name_lower.contains("cap")
-            {
-                return false;
+        if let Ok(exe_path) = pid_to_exe_path(process_id) {
+            if let Some(exe_name) = exe_path.file_name().and_then(|n| n.to_str()) {
+                let exe_name_lower = exe_name.to_lowercase();
+                if exe_name_lower.contains("webview2")
+                    || exe_name_lower.contains("msedgewebview2")
+                    || exe_name_lower.contains("cap")
+                {
+                    return false;
+                }
             }
         }
 

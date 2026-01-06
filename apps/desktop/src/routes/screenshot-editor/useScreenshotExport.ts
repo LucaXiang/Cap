@@ -3,6 +3,7 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
 import { createSignal } from "solid-js";
 import toast from "solid-toast";
+import { t } from "~/components/I18nProvider";
 import { commands } from "~/utils/tauri";
 import { getArrowHeadPoints } from "./arrow";
 import { type Annotation, useScreenshotEditorContext } from "./context";
@@ -288,17 +289,17 @@ export function useScreenshotExport() {
 				});
 				if (savePath) {
 					await writeFile(savePath, uint8Array);
-					toast.success("Screenshot saved!");
+					toast.success(t("screenshot.messages.saveSuccess"));
 					setDialog({ ...dialog(), open: false });
 				}
 			} else {
 				await commands.copyImageToClipboard(Array.from(uint8Array));
-				toast.success("Screenshot copied to clipboard!");
+				toast.success(t("screenshot.messages.copySuccess"));
 				setDialog({ ...dialog(), open: false });
 			}
 		} catch (err) {
 			console.error(err);
-			toast.error("Failed to export");
+			toast.error(t("screenshot.messages.exportFailed"));
 		} finally {
 			setIsExporting(false);
 		}

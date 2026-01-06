@@ -54,23 +54,22 @@ struct OpenState {
 
 impl OpenState {
     fn handle_input_connected(&mut self, data: InputConnected, id: DeviceOrModelID) -> bool {
-        if let Some(connecting) = &self.connecting
-            && id == connecting.id
-        {
-            trace!("Attaching new camera");
+        if let Some(connecting) = &self.connecting {
+            if id == connecting.id {
+                trace!("Attaching new camera");
 
-            if let Some(attached) = &mut self.attached {
-                attached.stage_pending_release();
-                attached.overwrite(id, data);
-            } else {
-                self.attached = Some(AttachedState::new(id, data));
+                if let Some(attached) = &mut self.attached {
+                    attached.stage_pending_release();
+                    attached.overwrite(id, data);
+                } else {
+                    self.attached = Some(AttachedState::new(id, data));
+                }
+
+                self.connecting = None;
+                return true;
             }
-
-            self.connecting = None;
-            true
-        } else {
-            false
         }
+        false
     }
 }
 
@@ -879,10 +878,10 @@ impl Message<Lock> for CameraFeed {
             let ready = &mut connecting.ready;
             let data = ready.await?;
 
-            if state.handle_input_connected(data, id)
-                && let Some(attached) = &mut state.attached
-            {
-                attached.finalize_pending_release();
+            if state.handle_input_connected(data, id) {
+                if let Some(attached) = &mut state.attached {
+                    attached.finalize_pending_release();
+                }
             }
         }
 
@@ -929,11 +928,12 @@ impl Message<InputConnected> for CameraFeed {
             let ready = &mut connecting.ready;
             let res = ready.await;
 
-            if let Ok(data) = res
-                && state.handle_input_connected(data, id)
-                && let Some(attached) = &mut state.attached
-            {
-                attached.finalize_pending_release();
+            if let Ok(data) = res {
+                if state.handle_input_connected(data, id) {
+                    if let Some(attached) = &mut state.attached {
+                        attached.finalize_pending_release();
+                    }
+                }
             }
         }
 
@@ -957,13 +957,13 @@ impl Message<InputConnectFailed> for CameraFeed {
 
         let state = self.state.try_as_open()?;
 
-        if let Some(connecting) = &state.connecting
-            && connecting.id == msg.id
-        {
-            state.connecting = None;
+        if let Some(connecting) = &state.connecting {
+            if connecting.id == msg.id {
+                state.connecting = None;
 
-            for tx in &mut self.on_ready.drain(..) {
-                tx.send(()).ok();
+                for tx in &mut self.on_ready.drain(..) {
+                    tx.send(()).ok();
+                }
             }
         }
 
@@ -979,22 +979,21 @@ impl Message<LockedCameraInputReconnected> for CameraFeed {
         msg: LockedCameraInputReconnected,
         _: &mut Context<Self, Self::Reply>,
     ) -> Self::Reply {
-        if let State::Locked { inner } = &mut self.state
-            && inner.id == msg.id
-        {
-            inner.stage_pending_release();
-            inner.overwrite(
-                msg.id,
-                InputConnected {
-                    done_tx: msg.done_tx,
-                    camera_info: msg.camera_info,
-                    video_info: msg.video_info,
-                },
-            );
-            true
-        } else {
-            false
+        if let State::Locked { inner } = &mut self.state {
+            if inner.id == msg.id {
+                inner.stage_pending_release();
+                inner.overwrite(
+                    msg.id,
+                    InputConnected {
+                        done_tx: msg.done_tx,
+                        camera_info: msg.camera_info,
+                        video_info: msg.video_info,
+                    },
+                );
+                return true;
+            }
         }
+        false
     }
 }
 
@@ -1008,10 +1007,10 @@ impl Message<FinalizePendingRelease> for CameraFeed {
     ) -> Self::Reply {
         match &mut self.state {
             State::Open(OpenState { attached, .. }) => {
-                if let Some(attached) = attached
-                    && attached.id == msg.id
-                {
-                    attached.finalize_pending_release();
+                if let Some(attached) = attached {
+                    if attached.id == msg.id {
+                        attached.finalize_pending_release();
+                    }
                 }
             }
             State::Locked { inner } => {

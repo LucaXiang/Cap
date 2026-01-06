@@ -18,6 +18,7 @@ import {
 	splitProps,
 	type ValidComponent,
 } from "solid-js";
+import { t } from "~/components/I18nProvider";
 import Tooltip from "~/components/Tooltip";
 import { useEditorContext } from "./context";
 import { TextInput } from "./TextInput";
@@ -192,7 +193,7 @@ export const Dialog = {
 	CloseButton() {
 		return (
 			<KDialog.CloseButton as={Button} variant="gray">
-				Cancel
+				{t("common.cancel")}
 			</KDialog.CloseButton>
 		);
 	},
@@ -389,7 +390,7 @@ export function EditorButton<T extends ValidComponent = "button">(
 			{local.tooltipText || local.comingSoon ? (
 				<Tooltip
 					kbd={local.kbd}
-					content={local.comingSoon ? "Coming Soon" : local.tooltipText}
+					content={local.comingSoon ? t("common.comingSoon") : local.tooltipText}
 				>
 					<Polymorphic
 						as="button"
@@ -445,7 +446,7 @@ export function ComingSoonTooltip(
 			</KTooltip.Trigger>
 			<KTooltip.Portal>
 				<KTooltip.Content class="p-2 font-medium bg-gray-12 text-gray-1 ui-expanded:animate-in ui-expanded:slide-in-from-bottom-1 ui-expanded:fade-in ui-closed:animate-out ui-closed:slide-out-to-bottom-1 ui-closed:fade-out rounded-lg text-xs z-[1000]">
-					Coming Soon
+					{t("common.comingSoon")}
 				</KTooltip.Content>
 			</KTooltip.Portal>
 		</KTooltip>

@@ -427,15 +427,15 @@ impl ShowCapWindow {
             }
             Self::Settings { page } => {
                 for (label, window) in app.webview_windows() {
-                    if let Ok(id) = CapWindowId::from_str(&label)
-                        && matches!(
+                    if let Ok(id) = CapWindowId::from_str(&label) {
+                        if matches!(
                             id,
                             CapWindowId::TargetSelectOverlay { .. }
                                 | CapWindowId::Main
                                 | CapWindowId::Camera
-                        )
-                    {
-                        let _ = window.hide();
+                        ) {
+                            let _ = window.hide();
+                        }
                     }
                 }
 
@@ -632,20 +632,20 @@ impl ShowCapWindow {
 
                     let window = window_builder.build()?;
 
-                    if let Some(id) = state.selected_camera_id.clone()
-                        && !state.camera_in_use
-                    {
-                        match state.camera_feed.ask(feeds::camera::SetInput { id }).await {
-                            Ok(ready_future) => {
-                                if let Err(err) = ready_future.await {
-                                    error!("Camera failed to initialize: {err}");
+                    if let Some(id) = state.selected_camera_id.clone() {
+                        if !state.camera_in_use {
+                            match state.camera_feed.ask(feeds::camera::SetInput { id }).await {
+                                Ok(ready_future) => {
+                                    if let Err(err) = ready_future.await {
+                                        error!("Camera failed to initialize: {err}");
+                                    }
+                                }
+                                Err(err) => {
+                                    error!("Failed to send SetInput to camera feed: {err}");
                                 }
                             }
-                            Err(err) => {
-                                error!("Failed to send SetInput to camera feed: {err}");
-                            }
+                            state.camera_in_use = true;
                         }
-                        state.camera_in_use = true;
                     }
 
                     if enable_native_camera_preview {
@@ -773,13 +773,16 @@ impl ShowCapWindow {
                 );
 
                 // Hide the main window if the target monitor is the same
-                if let Some(main_window) = CapWindowId::Main.get(app)
-                    && let (Ok(outer_pos), Ok(outer_size)) =
+                if let Some(main_window) = CapWindowId::Main.get(app) {
+                    if let (Ok(outer_pos), Ok(outer_size)) =
                         (main_window.outer_position(), main_window.outer_size())
-                    && let Ok(scale_factor) = main_window.scale_factor()
-                    && display.intersects(outer_pos, outer_size, scale_factor)
-                {
-                    let _ = main_window.minimize();
+                    {
+                        if let Ok(scale_factor) = main_window.scale_factor() {
+                            if display.intersects(outer_pos, outer_size, scale_factor) {
+                                let _ = main_window.minimize();
+                            }
+                        }
+                    }
                 };
 
                 window

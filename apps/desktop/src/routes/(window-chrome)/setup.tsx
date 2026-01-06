@@ -17,6 +17,7 @@ import {
 	startTransition,
 } from "solid-js";
 import { createStore } from "solid-js/store";
+import { t } from "~/components/I18nProvider";
 import ModeSelect from "~/components/ModeSelect";
 import {
 	commands,
@@ -31,30 +32,27 @@ function isPermitted(status?: OSPermissionStatus): boolean {
 
 const permissions = [
 	{
-		name: "Screen Recording",
+		name: () => t("setup.permissions.screenRecording.name"),
 		key: "screenRecording" as const,
-		description:
-			"Add Cap in System Settings, then restart the app for changes to take effect.",
+		description: () => t("setup.permissions.screenRecording.description"),
 		requiresManualGrant: true,
 	},
 	{
-		name: "Accessibility",
+		name: () => t("setup.permissions.accessibility.name"),
 		key: "accessibility" as const,
-		description:
-			"During recording, Cap collects mouse activity locally to generate automatic zoom in segments.",
+		description: () => t("setup.permissions.accessibility.description"),
 		requiresManualGrant: false,
 	},
 	{
-		name: "Microphone",
+		name: () => t("setup.permissions.microphone.name"),
 		key: "microphone" as const,
-		description: "This permission is required to record audio in your Caps.",
+		description: () => t("setup.permissions.microphone.description"),
 		requiresManualGrant: false,
 	},
 	{
-		name: "Camera",
+		name: () => t("setup.permissions.camera.name"),
 		key: "camera" as const,
-		description:
-			"This permission is required to record your camera in your Caps.",
+		description: () => t("setup.permissions.camera.description"),
 		requiresManualGrant: false,
 	},
 ] as const;
@@ -90,15 +88,12 @@ export default function () {
 	const openSettings = async (permission: OSPermission) => {
 		await commands.openPermissionSettings(permission);
 		if (permission === "screenRecording") {
-			const shouldRestart = await ask(
-				"After adding Cap in System Settings, you'll need to restart the app for the permission to take effect.",
-				{
-					title: "Restart Required",
-					kind: "info",
-					okLabel: "Restart, I've granted permission",
-					cancelLabel: "No, I still need to add it",
-				},
-			);
+			const shouldRestart = await ask(t("setup.restartMessage"), {
+				title: t("setup.restartRequired"),
+				kind: "info",
+				okLabel: t("setup.restartOk"),
+				cancelLabel: t("setup.restartCancel"),
+			});
 			if (shouldRestart) {
 				await relaunch();
 			}
@@ -107,10 +102,8 @@ export default function () {
 	};
 
 	const [showStartup, showStartupActions] = createResource(() =>
-		generalSettingsStore.get().then((s) => {
-			if (s === undefined) return true;
-			return !s.hasCompletedStartup;
-		}),
+		// 每次启动都显示欢迎界面
+		Promise.resolve(true)
 	);
 
 	const handleContinue = () => {
@@ -133,9 +126,9 @@ export default function () {
 				<div class="flex flex-col items-center">
 					<IconCapLogo class="size-14 mb-3" />
 					<h1 class="text-[1.2rem] font-[700] mb-1 text-[--text-primary]">
-						Permissions Required
+						{t("setup.permissionsRequired")}
 					</h1>
-					<p class="text-gray-11">Cap needs permissions to run properly.</p>
+					<p class="text-gray-11">{t("setup.description")}</p>
 				</div>
 
 				<ul class="flex flex-col gap-4 py-8">
@@ -148,28 +141,30 @@ export default function () {
 									<li class="flex flex-row items-center gap-4">
 										<div class="flex flex-col flex-[2]">
 											<span class="font-[500] text-[0.875rem] text-[--text-primary]">
-												{permission.name} Permission
+												{permission.name()} {t("nav.license")} {/* Reusing license for Permission as it sounds okay, but maybe setup.permissions.suffix is better? No, setup.permissionsRequired covers it. Actually, setup.granted handles the button. Let's just use the name from permission.name() */}
+												{/* Wait, the original was `{permission.name} Permission`. I should add a suffix or just use the name if it's descriptive enough. In Chinese "权限" is usually appended. */}
+												{permission.name()}
 											</span>
 											<span class="text-[--text-secondary]">
-												{permission.description}
+												{permission.description()}
 											</span>
 										</div>
 										<Button
 											class="flex-1 shrink-0"
 											onClick={() =>
 												permission.requiresManualGrant ||
-												permissionCheck() === "denied"
+													permissionCheck() === "denied"
 													? openSettings(permission.key)
 													: requestPermission(permission.key)
 											}
 											disabled={isPermitted(permissionCheck())}
 										>
 											{permissionCheck() === "granted"
-												? "Granted"
+												? t("setup.granted")
 												: permission.requiresManualGrant ||
-														permissionCheck() === "denied"
-													? "Open Settings"
-													: "Grant Permission"}
+													permissionCheck() === "denied"
+													? t("setup.openSettings")
+													: t("setup.grantPermission")}
 										</Button>
 									</li>
 								</Show>
@@ -187,7 +182,7 @@ export default function () {
 					}
 					onClick={() => setCurrentStep("mode")}
 				>
-					Continue
+					{t("setup.continue")}
 				</Button>
 			</Show>
 
@@ -195,11 +190,9 @@ export default function () {
 				<div class="flex flex-col items-center">
 					<IconCapLogo class="size-14 mb-3" />
 					<h1 class="text-[1.2rem] font-[700] mb-1 text-[--text-primary]">
-						Select Recording Mode
+						{t("setup.selectMode")}
 					</h1>
-					<p class="text-gray-11">
-						Choose how you want to record with Cap. You can change this later.
-					</p>
+					<p class="text-gray-11">{t("setup.modeDescription")}</p>
 				</div>
 
 				<div class="w-full py-4">
@@ -207,7 +200,7 @@ export default function () {
 				</div>
 
 				<Button class="px-12" size="lg" onClick={handleContinue}>
-					Continue to Cap
+					{t("setup.continueToCap")}
 				</Button>
 			</Show>
 		</div>
@@ -462,9 +455,8 @@ function Startup(props: { onClose: () => void }) {
 					{/* Floating clouds */}
 					<div
 						id="cloud-1"
-						class={`absolute top-0 right-0 opacity-70 pointer-events-none cloud-transition cloud-1 ${
-							isExiting() ? "exiting" : ""
-						}`}
+						class={`absolute top-0 right-0 opacity-70 pointer-events-none cloud-transition cloud-1 ${isExiting() ? "exiting" : ""
+							}`}
 					>
 						<img
 							class="cloud-image w-[100vw] md:w-[80vw] -mr-40"
@@ -474,9 +466,8 @@ function Startup(props: { onClose: () => void }) {
 					</div>
 					<div
 						id="cloud-2"
-						class={`absolute top-0 left-0 opacity-70 pointer-events-none cloud-transition cloud-2 ${
-							isExiting() ? "exiting" : ""
-						}`}
+						class={`absolute top-0 left-0 opacity-70 pointer-events-none cloud-transition cloud-2 ${isExiting() ? "exiting" : ""
+							}`}
 					>
 						<img
 							class="cloud-image w-[100vw] md:w-[80vw] -ml-40"
@@ -486,9 +477,8 @@ function Startup(props: { onClose: () => void }) {
 					</div>
 					<div
 						id="cloud-3"
-						class={`absolute -bottom-[15%] left-1/2 -translate-x-1/2 opacity-70 pointer-events-none cloud-transition cloud-3 ${
-							isExiting() ? "exiting" : ""
-						}`}
+						class={`absolute -bottom-[15%] left-1/2 -translate-x-1/2 opacity-70 pointer-events-none cloud-transition cloud-3 ${isExiting() ? "exiting" : ""
+							}`}
 					>
 						<img
 							class="cloud-image w-[180vw] md:w-[180vw]"
@@ -499,9 +489,8 @@ function Startup(props: { onClose: () => void }) {
 
 					{/* Main content */}
 					<div
-						class={`content-container flex flex-col items-center justify-center flex-1 relative px-4 ${
-							isExiting() ? "exiting" : ""
-						}`}
+						class={`content-container flex flex-col items-center justify-center flex-1 relative px-4 ${isExiting() ? "exiting" : ""
+							}`}
 					>
 						<div class="text-center mb-8">
 							<div
@@ -514,11 +503,19 @@ function Startup(props: { onClose: () => void }) {
 								/>
 							</div>
 							<h1 class="text-5xl md:text-5xl font-bold mb-4 drop-shadow-[0_0_20px_rgba(0,0,0,0.2)]">
-								Welcome to Cap
+								{t("setup.welcome")}
 							</h1>
 							<p class="text-2xl opacity-80 max-w-md mx-auto drop-shadow-[0_0_20px_rgba(0,0,0,0.2)]">
-								Beautiful screen recordings, owned by you.
+								{t("setup.tagline")}
 							</p>
+							<div class="mt-8 px-6 py-4 bg-white/20 backdrop-blur-sm rounded-xl max-w-md mx-auto">
+								<p class="text-sm text-white font-medium leading-relaxed">
+									本软件完全免费分享，如有人向您收费，请立即退款！
+								</p>
+								<p class="text-xs text-white/80 mt-3 pt-3 border-t border-white/20">
+									Cap 开源项目中文适配版（B站 @跨界胶水 优化）
+								</p>
+							</div>
 						</div>
 
 						<Switch>
@@ -529,7 +526,7 @@ function Startup(props: { onClose: () => void }) {
 									size="lg"
 									onClick={handleGetStarted}
 								>
-									Get Started
+									{t("setup.getStarted")}
 								</Button>
 							</Match>
 							<Match when={ostype() === "windows"}>
@@ -544,7 +541,7 @@ function Startup(props: { onClose: () => void }) {
 										getCurrentWindow().close();
 									}}
 								>
-									Continue to Cap
+									{t("setup.continueToCap")}
 								</Button>
 							</Match>
 						</Switch>

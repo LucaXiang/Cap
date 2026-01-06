@@ -21,6 +21,7 @@ import {
 } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Transition } from "solid-transition-group";
+import { t } from "~/components/I18nProvider";
 import {
 	CROP_ZERO,
 	type CropBounds,
@@ -369,24 +370,24 @@ function Dialogs() {
 
 								return (
 									<DialogContent
-										title="Create Preset"
+										title={t("editor.presets.createTitle")}
 										confirm={
 											<Dialog.ConfirmButton
 												disabled={createPreset.isPending}
 												onClick={() => createPreset.mutate()}
 											>
-												Create
+												{t("common.create")}
 											</Dialog.ConfirmButton>
 										}
 									>
-										<Subfield name="Name" required />
+										<Subfield name={t("common.name")} required />
 										<Input
 											class="mt-2"
 											value={form.name}
-											placeholder="Enter preset name..."
+											placeholder={t("editor.presets.placeholder")}
 											onInput={(e) => setForm("name", e.currentTarget.value)}
 										/>
-										<Subfield name="Set as default" class="mt-4">
+										<Subfield name={t("editor.presets.setDefault")} class="mt-4">
 											<Toggle
 												checked={form.default}
 												onChange={(checked) => setForm("default", checked)}
@@ -417,17 +418,17 @@ function Dialogs() {
 
 								return (
 									<DialogContent
-										title="Rename Preset"
+										title={t("editor.presets.renameTitle")}
 										confirm={
 											<Dialog.ConfirmButton
 												disabled={renamePreset.isPending}
 												onClick={() => renamePreset.mutate()}
 											>
-												Rename
+												{t("common.rename")}
 											</Dialog.ConfirmButton>
 										}
 									>
-										<Subfield name="Name" required />
+										<Subfield name={t("common.name")} required />
 										<Input
 											class="mt-2"
 											value={name()}
@@ -456,19 +457,19 @@ function Dialogs() {
 
 								return (
 									<DialogContent
-										title="Delete Preset"
+										title={t("editor.presets.deleteTitle")}
 										confirm={
 											<Dialog.ConfirmButton
 												variant="destructive"
 												onClick={() => deletePreset.mutate()}
 												disabled={deletePreset.isPending}
 											>
-												Delete
+												{t("common.delete")}
 											</Dialog.ConfirmButton>
 										}
 									>
 										<p class="text-gray-11">
-											Are you sure you want to delete this preset?
+											{t("editor.presets.deleteConfirm")}
 										</p>
 									</DialogContent>
 								);
@@ -578,7 +579,7 @@ function Dialogs() {
 										<Dialog.Header>
 											<div class="flex flex-row space-x-[2rem]">
 												<div class="flex flex-row items-center space-x-[0.75rem] text-gray-11">
-													<span>Size</span>
+													<span>{t("editor.crop.size")}</span>
 													<div class="w-[3.25rem]">
 														<BoundInput field="width" max={display.width} />
 													</div>
@@ -588,7 +589,7 @@ function Dialogs() {
 													</div>
 												</div>
 												<div class="flex flex-row items-center space-x-[0.75rem] text-gray-11">
-													<span>Position</span>
+													<span>{t("editor.crop.position")}</span>
 													<div class="w-[3.25rem]">
 														<BoundInput field="x" />
 													</div>
@@ -639,7 +640,7 @@ function Dialogs() {
 														crop().height === display.height
 													}
 												>
-													Full
+													{t("editor.crop.full")}
 												</EditorButton>
 												<EditorButton
 													leftIcon={<IconCapCircleX />}
@@ -654,7 +655,7 @@ function Dialogs() {
 														crop().height === dialog().size.y
 													}
 												>
-													Reset
+													{t("editor.crop.reset")}
 												</EditorButton>
 											</div>
 										</Dialog.Header>
@@ -703,7 +704,7 @@ function Dialogs() {
 													setDialog((d) => ({ ...d, open: false }));
 												}}
 											>
-												Save
+												{t("editor.crop.save")}
 											</Button>
 										</Dialog.Footer>
 									</>

@@ -377,31 +377,33 @@ impl EditorInstance {
                             let prefetch_frame = frame_number + offset;
                             if let Some((prefetch_segment_time, prefetch_segment)) =
                                 project.get_segment_time(prefetch_frame as f64 / fps as f64)
-                                && let Some(prefetch_segment_media) = self
+                            {
+                                if let Some(prefetch_segment_media) = self
                                     .segment_medias
                                     .get(prefetch_segment.recording_clip as usize)
-                            {
-                                let prefetch_clip_offsets = project
-                                    .clips
-                                    .iter()
-                                    .find(|v| v.index == prefetch_segment.recording_clip)
-                                    .map(|v| v.offsets)
-                                    .unwrap_or_default();
-                                let decoders = prefetch_segment_media.decoders.clone();
-                                let cancel_token = new_cancel_token.clone();
-                                let playback_rx = playback_rx.clone();
-                                tokio::spawn(async move {
-                                    if cancel_token.is_cancelled() || *playback_rx.borrow() {
-                                        return;
-                                    }
-                                    let _ = decoders
-                                        .get_frames(
-                                            prefetch_segment_time as f32,
-                                            !hide_camera,
-                                            prefetch_clip_offsets,
-                                        )
-                                        .await;
-                                });
+                                {
+                                    let prefetch_clip_offsets = project
+                                        .clips
+                                        .iter()
+                                        .find(|v| v.index == prefetch_segment.recording_clip)
+                                        .map(|v| v.offsets)
+                                        .unwrap_or_default();
+                                    let decoders = prefetch_segment_media.decoders.clone();
+                                    let cancel_token = new_cancel_token.clone();
+                                    let playback_rx = playback_rx.clone();
+                                    tokio::spawn(async move {
+                                        if cancel_token.is_cancelled() || *playback_rx.borrow() {
+                                            return;
+                                        }
+                                        let _ = decoders
+                                            .get_frames(
+                                                prefetch_segment_time as f32,
+                                                !hide_camera,
+                                                prefetch_clip_offsets,
+                                            )
+                                            .await;
+                                    });
+                                }
                             }
                         }
                     }

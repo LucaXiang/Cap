@@ -346,13 +346,14 @@ pub fn get_duration(
 ) -> f64 {
     let mut max_duration = recordings.duration();
 
-    if let Some(camera_path) = meta.camera_path()
-        && let Ok(camera_duration) =
+    if let Some(camera_path) = meta.camera_path() {
+        if let Ok(camera_duration) =
             recordings.get_source_duration(&recording_meta.path(&camera_path))
-    {
-        println!("Camera recording duration: {camera_duration}");
-        max_duration = max_duration.max(camera_duration);
-        println!("New max duration after camera check: {max_duration}");
+        {
+            println!("Camera recording duration: {camera_duration}");
+            max_duration = max_duration.max(camera_duration);
+            println!("New max duration after camera check: {max_duration}");
+        }
     }
 
     if let Some(timeline) = &project.timeline {

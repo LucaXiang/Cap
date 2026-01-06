@@ -1150,17 +1150,19 @@ unsafe impl Sync for D3D11Converter {}
 impl Drop for D3D11Resources {
     fn drop(&mut self) {
         unsafe {
-            if let Some(handle) = self.input_shared_handle.take()
-                && !handle.is_invalid()
-                && let Err(e) = CloseHandle(handle)
-            {
-                tracing::error!("Failed to close input shared handle: {:?}", e);
+            if let Some(handle) = self.input_shared_handle.take() {
+                if !handle.is_invalid() {
+                    if let Err(e) = CloseHandle(handle) {
+                        tracing::error!("Failed to close input shared handle: {:?}", e);
+                    }
+                }
             }
-            if let Some(handle) = self.output_shared_handle.take()
-                && !handle.is_invalid()
-                && let Err(e) = CloseHandle(handle)
-            {
-                tracing::error!("Failed to close output shared handle: {:?}", e);
+            if let Some(handle) = self.output_shared_handle.take() {
+                if !handle.is_invalid() {
+                    if let Err(e) = CloseHandle(handle) {
+                        tracing::error!("Failed to close output shared handle: {:?}", e);
+                    }
+                }
             }
         }
     }

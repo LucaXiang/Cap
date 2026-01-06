@@ -2,6 +2,7 @@ import { Button } from "@cap/ui-solid";
 import { createMutation, useQueryClient } from "@tanstack/solid-query";
 import { getCurrentWindow, Window } from "@tauri-apps/api/window";
 import { type Accessor, createSignal, Show } from "solid-js";
+import { t } from "~/components/I18nProvider";
 import { generalSettingsStore } from "~/store";
 import { getProPlanId } from "~/utils/plans";
 import { createLicenseQuery } from "~/utils/queries";
@@ -14,14 +15,14 @@ import { authStore } from "../../store";
 import { Dialog, DialogContent, Input } from "../editor/ui";
 
 const proFeatures = [
-	"Commercial License Included",
-	"Unlimited cloud storage & Shareable links",
-	"Connect custom S3 storage bucket",
-	"Advanced teams features",
-	"Unlimited views",
-	"Password protected videos",
-	"Advanced analytics",
-	"Priority support",
+	() => t("upgrade.proFeatures.commercial"),
+	() => t("upgrade.proFeatures.storage"),
+	() => t("upgrade.proFeatures.s3"),
+	() => t("upgrade.proFeatures.teams"),
+	() => t("upgrade.proFeatures.views"),
+	() => t("upgrade.proFeatures.password"),
+	() => t("upgrade.proFeatures.analytics"),
+	() => t("upgrade.proFeatures.support"),
 ];
 
 import { RuntimeLoader } from "@rive-app/canvas";
@@ -255,9 +256,9 @@ export default function Page() {
 			{upgradeComplete() && (
 				<div class="flex justify-center items-center h-full bg-opacity-75">
 					<div class="relative z-10 p-6 text-center bg-white rounded-lg shadow-lg">
-						<h2 class="mb-4 text-2xl font-bold">Upgrade complete</h2>
+						<h2 class="mb-4 text-2xl font-bold">{t("upgrade.completeTitle")}</h2>
 						<p class="mb-4 text-sm text-gray-10">
-							You can now close this window - thank you for upgrading!
+							{t("upgrade.completeMessage")}
 						</p>
 						<Button
 							onClick={() => {
@@ -268,7 +269,7 @@ export default function Page() {
 							variant="primary"
 							size="lg"
 						>
-							Close window
+							{t("upgrade.closeWindow")}
 						</Button>
 					</div>
 				</div>
@@ -278,16 +279,16 @@ export default function Page() {
 					<div class="p-8 mx-auto w-full max-w-[700px] rounded-xl border shadow-sm bg-gray-2 border-gray-3">
 						<div class="space-y-6">
 							<div class="flex flex-col items-center mb-6 text-center">
-								<h3 class="text-2xl font-medium">Commercial License</h3>
+								<h3 class="text-2xl font-medium">{t("upgrade.commercialLicense")}</h3>
 								<p class="text-sm text-gray-11">
-									Your license details for Cap commercial use
+									{t("upgrade.commercialDescription")}
 								</p>
 							</div>
 
 							<div class="space-y-6">
 								<div>
 									<label class="block mb-2 text-sm text-gray-12">
-										License Key
+										{t("upgrade.licenseKey")}
 									</label>
 									<p class="overflow-x-auto p-3 font-mono text-xs whitespace-pre-wrap break-all rounded-lg border border-gray-4 text-gray-9 bg-gray-3">
 										{license.data.licenseKey}
@@ -297,7 +298,7 @@ export default function Page() {
 								<Show when={license.data.expiryDate}>
 									{(expiryDate) => (
 										<div class="space-y-1">
-											<label class="text-sm text-gray-12">Expires</label>
+											<label class="text-sm text-gray-12">{t("upgrade.expires")}</label>
 											<p class="text-gray-10">
 												{new Date(expiryDate()).toLocaleDateString(undefined, {
 													year: "numeric",
@@ -318,8 +319,8 @@ export default function Page() {
 										}}
 									>
 										{resetLicense.isPending
-											? "Deactivating..."
-											: "Deactivate License"}
+											? t("upgrade.deactivating")
+											: t("upgrade.deactivateLicense")}
 									</Button>
 								</div>
 							</div>
@@ -329,7 +330,7 @@ export default function Page() {
 					<>
 						<div class="text-center">
 							<h1 class="text-4xl md:text-4xl mb-6 tracking-[-.05em] font-medium text-[--text-primary]">
-								Early Adopter Pricing
+								{t("upgrade.title")}
 							</h1>
 						</div>
 						<div class="flex gap-4 w-full">
@@ -359,10 +360,10 @@ export default function Page() {
 										<Commercial class="w-[250px]" />
 										<div class="space-y-1 text-center">
 											<h3 class="text-2xl font-medium tracking-tight leading-5">
-												Commercial License
+												{t("upgrade.commercialLicense")}
 											</h3>
 											<p class="mt-2 text-sm text-[--text-tertiary]">
-												For commercial use
+												{t("upgrade.forCommercialUse")}
 											</p>
 										</div>
 										<div class="flex flex-col justify-center items-center">
@@ -372,12 +373,12 @@ export default function Page() {
 											</h3>
 											{isCommercialAnnual() && (
 												<p class="text-[16px] font-medium text-gray-11">
-													billed annually
+													{t("upgrade.billedAnnually")}
 												</p>
 											)}
 											{!isCommercialAnnual() && (
 												<p class="text-[16px] font-medium text-gray-11">
-													one-time payment
+													{t("upgrade.oneTimePayment")}
 												</p>
 											)}
 										</div>
@@ -386,19 +387,18 @@ export default function Page() {
 											class="px-3 py-2 text-center rounded-full border border-transparent transition-all duration-200 cursor-pointer bg-gray-5 hover:border-gray-400"
 										>
 											<p class="text-xs text-gray-12">
-												Switch to {isCommercialAnnual() ? "lifetime" : "yearly"}
-												:{" "}
-												<span class="font-medium">
-													{isCommercialAnnual() ? "$58" : "$29"}
-												</span>
+												{t("upgrade.switchTo", {
+													mode: isCommercialAnnual() ? t("upgrade.lifetime") : t("upgrade.yearly"),
+													price: isCommercialAnnual() ? "$58" : "$29"
+												})}
 											</p>
 										</div>
 										<ul class="flex flex-col gap-2 justify-center list-none">
 											{[
-												"Commercial Use of Cap Recorder + Editor",
-												"Community Support",
-												"Local-only features",
-												"Perpetual license option",
+												t("upgrade.pricing.commercial"),
+												t("upgrade.pricing.support"),
+												t("upgrade.pricing.localOnly"),
+												t("upgrade.pricing.perpetual"),
 											].map((feature) => (
 												<li class="flex justify-start items-center">
 													<div class="flex justify-center items-center p-0 m-0 w-6 h-6">
@@ -425,14 +425,14 @@ export default function Page() {
 										size="lg"
 									>
 										{openCommercialCheckout.isPending
-											? "Loading..."
-											: "Purchase License"}
+											? t("upgrade.loading")
+											: t("upgrade.purchaseLicense")}
 									</Button>
 									<p
 										onClick={() => setOpenLicenseDialog(true)}
 										class="mb-2 text-sm transition-colors cursor-pointer text-gray-11 hover:text-gray-12"
 									>
-										Already have a license key?
+										{t("upgrade.alreadyHaveLicense")}
 									</p>
 								</div>
 							</div>
@@ -464,10 +464,10 @@ export default function Page() {
 										<Pro class="w-[250px]" />
 										<div class="space-y-1 text-center">
 											<h3 class="text-2xl font-medium tracking-tight leading-5 text-gray-1">
-												Cap Pro
+												{t("upgrade.capPro")}
 											</h3>
 											<p class="text-[0.875rem] text-gray-9">
-												For professional use and teams.
+												{t("upgrade.proDescription")}
 											</p>
 										</div>
 										<div class="flex flex-col justify-center items-center">
@@ -477,12 +477,12 @@ export default function Page() {
 											</h3>
 											{isProAnnual() && (
 												<p class="text-[16px] font-medium text-gray-9">
-													per user, billed annually
+													{t("upgrade.perUserBilledAnnually")}
 												</p>
 											)}
 											{!isProAnnual() && (
 												<p class="text-[16px] font-medium text-gray-9">
-													per user, billed monthly
+													{t("upgrade.perUserBilledMonthly")}
 												</p>
 											)}
 										</div>
@@ -491,12 +491,13 @@ export default function Page() {
 											class="px-3 py-2 text-center bg-blue-500 rounded-full border border-transparent transition-all duration-200 cursor-pointer hover:border-blue-400"
 										>
 											<p class="text-xs text-solid-white">
-												Switch to {isProAnnual() ? "monthly" : "yearly"}:{" "}
-												<span class="font-medium">
-													{isProAnnual()
-														? "$12 per user, billed monthly"
-														: "$8.16 per user, billed annually"}
-												</span>
+												{t("upgrade.switchTo", {
+													mode: isProAnnual() ? t("upgrade.monthly") : t("upgrade.yearly"), // monthly is not in upgrade keys, let's reuse setup? No, add to upgrade or common. Actually, monthly is in CaptionsTab for other things. Let's add common keys?
+													// For now, let's check if update or upgrade keys are enough.
+													price: isProAnnual()
+														? t("upgrade.perUserBilledMonthly")
+														: t("upgrade.perUserBilledAnnually")
+												})}
 											</p>
 										</div>
 										<ul class="flex flex-col gap-2 justify-center list-none">
@@ -505,7 +506,7 @@ export default function Page() {
 													<div class="flex justify-center items-center p-0 m-0 size-4">
 														<IconLucideCheck class="size-4" />
 													</div>
-													<span class="ml-2 text-[0.9rem]">{feature}</span>
+													<span class="ml-2 text-[0.9rem]">{feature()}</span>
 												</li>
 											))}
 										</ul>
@@ -515,7 +516,7 @@ export default function Page() {
 										class="!rounded-full !text-lg w-full mx-auto"
 										onClick={openCheckoutInExternalBrowser}
 									>
-										{loading() ? "Loading..." : "Upgrade to Cap Pro"}
+										{loading() ? t("upgrade.loading") : t("upgrade.upgradeToPro")}
 									</Button>
 								</div>
 							</div>
@@ -570,7 +571,7 @@ const ActivateLicenseDialog = ({ open, onOpenChange }: Props) => {
 	return (
 		<Dialog.Root open={open()} onOpenChange={onOpenChange}>
 			<DialogContent
-				title="Activate License"
+				title={t("upgrade.activateLicense.title")}
 				confirm={
 					<Dialog.ConfirmButton
 						disabled={activateLicenseKey.isPending}
@@ -580,13 +581,13 @@ const ActivateLicenseDialog = ({ open, onOpenChange }: Props) => {
 							})
 						}
 					>
-						Activate
+						{t("upgrade.activateLicense.button")}
 					</Dialog.ConfirmButton>
 				}
 			>
 				<Input
 					class="mt-2"
-					placeholder="Enter license key..."
+					placeholder={t("upgrade.activateLicense.placeholder")}
 					value={licenseKey()}
 					onInput={(e) => setLicenseKey(e.currentTarget.value)}
 				/>

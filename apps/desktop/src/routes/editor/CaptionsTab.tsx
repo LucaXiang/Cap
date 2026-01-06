@@ -1,4 +1,5 @@
 import { Button } from "@cap/ui-solid";
+import { t } from "~/components/I18nProvider";
 import { Select as KSelect } from "@kobalte/core/select";
 import { createWritableMemo } from "@solid-primitives/memo";
 import { appLocalDataDir, join } from "@tauri-apps/api/path";
@@ -51,33 +52,111 @@ interface LanguageOption {
 const MODEL_OPTIONS: ModelOption[] = [
 	{
 		name: "small",
-		label: "Small",
+		get label() {
+			return t("editor.captions.small");
+		},
 		size: "466MB",
-		description: "Balanced speed/accuracy",
+		get description() {
+			return t("editor.captions.balancedSpeedAccuracy");
+		},
 	},
 	{
 		name: "medium",
-		label: "Medium",
+		get label() {
+			return t("editor.captions.medium");
+		},
 		size: "1.5GB",
-		description: "Slower, more accurate",
+		get description() {
+			return t("editor.captions.slowerMoreAccurate");
+		},
 	},
 ];
 
 const LANGUAGE_OPTIONS: LanguageOption[] = [
-	{ code: "auto", label: "Auto Detect" },
-	{ code: "en", label: "English" },
-	{ code: "es", label: "Spanish" },
-	{ code: "fr", label: "French" },
-	{ code: "de", label: "German" },
-	{ code: "it", label: "Italian" },
-	{ code: "pt", label: "Portuguese" },
-	{ code: "nl", label: "Dutch" },
-	{ code: "pl", label: "Polish" },
-	{ code: "ru", label: "Russian" },
-	{ code: "tr", label: "Turkish" },
-	{ code: "ja", label: "Japanese" },
-	{ code: "ko", label: "Korean" },
-	{ code: "zh", label: "Chinese" },
+	{
+		code: "auto",
+		get label() {
+			return t("editor.captions.autoDetect");
+		},
+	},
+	{
+		code: "en",
+		get label() {
+			return t("editor.captions.english");
+		},
+	},
+	{
+		code: "es",
+		get label() {
+			return t("editor.captions.spanish");
+		},
+	},
+	{
+		code: "fr",
+		get label() {
+			return t("editor.captions.french");
+		},
+	},
+	{
+		code: "de",
+		get label() {
+			return t("editor.captions.german");
+		},
+	},
+	{
+		code: "it",
+		get label() {
+			return t("editor.captions.italian");
+		},
+	},
+	{
+		code: "pt",
+		get label() {
+			return t("editor.captions.portuguese");
+		},
+	},
+	{
+		code: "nl",
+		get label() {
+			return t("editor.captions.dutch");
+		},
+	},
+	{
+		code: "pl",
+		get label() {
+			return t("editor.captions.polish");
+		},
+	},
+	{
+		code: "ru",
+		get label() {
+			return t("editor.captions.russian");
+		},
+	},
+	{
+		code: "tr",
+		get label() {
+			return t("editor.captions.turkish");
+		},
+	},
+	{
+		code: "ja",
+		get label() {
+			return t("editor.captions.japanese");
+		},
+	},
+	{
+		code: "ko",
+		get label() {
+			return t("editor.captions.korean");
+		},
+	},
+	{
+		code: "zh",
+		get label() {
+			return t("editor.captions.chinese");
+		},
+	},
 ];
 
 interface PositionOption {
@@ -86,21 +165,66 @@ interface PositionOption {
 }
 
 const POSITION_OPTIONS: PositionOption[] = [
-	{ value: "top-left", label: "Top Left" },
-	{ value: "top-center", label: "Top Center" },
-	{ value: "top-right", label: "Top Right" },
-	{ value: "bottom-left", label: "Bottom Left" },
-	{ value: "bottom-center", label: "Bottom Center" },
-	{ value: "bottom-right", label: "Bottom Right" },
+	{
+		value: "top-left",
+		get label() {
+			return t("editor.sidebar.positionOptions.topLeft");
+		},
+	},
+	{
+		value: "top-center",
+		get label() {
+			return t("editor.sidebar.positionOptions.topCenter");
+		},
+	},
+	{
+		value: "top-right",
+		get label() {
+			return t("editor.sidebar.positionOptions.topRight");
+		},
+	},
+	{
+		value: "bottom-left",
+		get label() {
+			return t("editor.sidebar.positionOptions.bottomLeft");
+		},
+	},
+	{
+		value: "bottom-center",
+		get label() {
+			return t("editor.sidebar.positionOptions.bottomCenter");
+		},
+	},
+	{
+		value: "bottom-right",
+		get label() {
+			return t("editor.sidebar.positionOptions.bottomRight");
+		},
+	},
 ];
 
 const DEFAULT_MODEL = "small";
 const MODEL_FOLDER = "transcription_models";
 
 const fontOptions = [
-	{ value: "System Sans-Serif", label: "System Sans-Serif" },
-	{ value: "System Serif", label: "System Serif" },
-	{ value: "System Monospace", label: "System Monospace" },
+	{
+		value: "System Sans-Serif",
+		get label() {
+			return t("editor.sidebar.fontOptions.sansSerif");
+		},
+	},
+	{
+		value: "System Serif",
+		get label() {
+			return t("editor.sidebar.fontOptions.serif");
+		},
+	},
+	{
+		value: "System Monospace",
+		get label() {
+			return t("editor.sidebar.fontOptions.monospace");
+		},
+	},
 ];
 
 function RgbInput(props: { value: string; onChange: (value: string) => void }) {
@@ -328,10 +452,10 @@ export function CaptionsTab() {
 			unlisten();
 
 			setDownloadedModels((prev) => [...prev, modelToDownload]);
-			toast.success("Transcription model downloaded successfully!");
+			toast.success(t("editor.captions.downloadSuccess"));
 		} catch (error) {
 			console.error("Error downloading model:", error);
-			toast.error("Failed to download transcription model");
+			toast.error(t("editor.captions.downloadFailed"));
 		} finally {
 			setIsDownloading(false);
 			setDownloadingModel(null);
@@ -340,7 +464,7 @@ export function CaptionsTab() {
 
 	const generateCaptions = async () => {
 		if (!editorInstance) {
-			toast.error("Editor instance not found");
+			toast.error(t("editor.export.messages.uploadFailed")); // Using a generic upload/instance failed key
 			return;
 		}
 
@@ -364,11 +488,9 @@ export function CaptionsTab() {
 			if (result && result.segments.length > 0) {
 				setProject("captions", "segments", result.segments);
 				updateCaptionSetting("enabled", true);
-				toast.success("Captions generated successfully!");
+				toast.success(t("editor.captions.generateSuccess"));
 			} else {
-				toast.error(
-					"No captions were generated. The audio might be too quiet or unclear.",
-				);
+				toast.error(t("editor.captions.noCaptionsGenerated"));
 			}
 		} catch (error) {
 			console.error("Error generating captions:", error);
@@ -381,15 +503,14 @@ export function CaptionsTab() {
 			}
 
 			if (errorMessage.includes("No audio stream found")) {
-				errorMessage = "No audio found in the video file";
+				errorMessage = t("editor.captions.noAudio");
 			} else if (errorMessage.includes("Model file not found")) {
-				errorMessage = "Caption model not found. Please download it first";
+				errorMessage = t("editor.captions.modelNotFound");
 			} else if (errorMessage.includes("Failed to load Whisper model")) {
-				errorMessage =
-					"Failed to load the caption model. Try downloading it again";
+				errorMessage = t("editor.captions.loadModelFailed");
 			}
 
-			toast.error(`Failed to generate captions: ${errorMessage}`);
+			toast.error(t("editor.captions.generateFailed", { error: errorMessage }));
 		} finally {
 			setIsGenerating(false);
 		}
@@ -430,7 +551,7 @@ export function CaptionsTab() {
 				id,
 				start: time,
 				end: time + 2,
-				text: "New caption",
+				text: t("editor.captions.newCaption"),
 			},
 		]);
 	};
@@ -440,12 +561,14 @@ export function CaptionsTab() {
 	);
 
 	return (
-		<Field name="Captions" icon={<IconCapMessageBubble />}>
+		<Field name={t("editor.captions.title")} icon={<IconCapMessageBubble />}>
 			<div class="flex flex-col gap-4">
 				<div class="space-y-6 transition-all duration-200">
 					<div class="space-y-4">
 						<div class="space-y-2">
-							<label class="text-xs text-gray-11">Transcription Model</label>
+							<label class="text-xs text-gray-11">
+								{t("editor.captions.transcriptionModel")}
+							</label>
 							<div class="grid grid-cols-2 gap-3">
 								<For each={MODEL_OPTIONS}>
 									{(model) => {
@@ -470,7 +593,10 @@ export function CaptionsTab() {
 														{model.label}
 													</span>
 													<Show when={isDownloaded()}>
-														<div class="text-green-9" title="Downloaded">
+														<div
+															class="text-green-9"
+															title={t("editor.captions.downloaded")}
+														>
 															<IconLucideCheck class="size-4" />
 														</div>
 													</Show>
@@ -519,7 +645,9 @@ export function CaptionsTab() {
 												(l) => l.code === state.selectedOption(),
 											);
 											return (
-												<span>{language?.label || "Select a language"}</span>
+												<span>
+													{language?.label || t("editor.captions.selectLanguage")}
+												</span>
 											);
 										}}
 									</KSelect.Value>
@@ -556,17 +684,17 @@ export function CaptionsTab() {
 												fallback={
 													<>
 														<IconLucideDownload class="size-4" />
-														Download{" "}
+														{t("editor.captions.downloadModel")}{" "}
 														{
 															MODEL_OPTIONS.find(
 																(m) => m.name === selectedModel(),
 															)?.label
-														}{" "}
-														Model
+														}
 													</>
 												}
 											>
-												Downloading... {Math.round(downloadProgress())}%
+												{t("editor.captions.downloading")}{" "}
+												{Math.round(downloadProgress())}%
 											</Show>
 										</Button>
 										<Show when={isDownloading()}>
@@ -587,10 +715,10 @@ export function CaptionsTab() {
 										class="w-full"
 									>
 										{isGenerating()
-											? "Generating..."
+											? t("editor.captions.generating")
 											: hasCaptions()
-												? "Regenerate Captions"
-												: "Generate Captions"}
+												? t("editor.captions.regenerate")
+												: t("editor.captions.generate")}
 									</Button>
 								</Show>
 							</Show>
@@ -603,10 +731,15 @@ export function CaptionsTab() {
 							!hasCaptions() && "opacity-50 pointer-events-none",
 						)}
 					>
-						<Field name="Font Settings" icon={<IconCapMessageBubble />}>
+						<Field
+							name={t("editor.captions.fontSettings")}
+							icon={<IconCapMessageBubble />}
+						>
 							<div class="space-y-3">
 								<div class="flex flex-col gap-2">
-									<span class="text-gray-11 text-sm">Font Family</span>
+									<span class="text-gray-11 text-sm">
+										{t("editor.captions.fontFamily")}
+									</span>
 									<KSelect<string>
 										options={fontOptions.map((f) => f.value)}
 										value={getSetting("font")}
@@ -657,7 +790,9 @@ export function CaptionsTab() {
 								</div>
 
 								<div class="flex flex-col gap-2">
-									<span class="text-gray-11 text-sm">Size</span>
+									<span class="text-gray-11 text-sm">
+										{t("editor.captions.fontSize")}
+									</span>
 									<Slider
 										value={[getSetting("size")]}
 										onChange={(v) => updateCaptionSetting("size", v[0])}
@@ -671,7 +806,7 @@ export function CaptionsTab() {
 								<div class="flex flex-col gap-2">
 									<div class="flex items-center justify-between">
 										<span class="text-gray-11 text-sm">
-											Active Word Highlight
+											{t("editor.captions.highlight")}
 										</span>
 										<Toggle
 											checked={getSetting("activeWordHighlight")}
@@ -682,15 +817,14 @@ export function CaptionsTab() {
 										/>
 									</div>
 									<p class="text-xs text-gray-10">
-										This is the first version of captions in Cap. Active word
-										highlighting may be inaccurate in some situations. We're
-										working on a fix for this and it will be released in
-										upcoming versions.
+										{t("editor.captions.highlightNote")}
 									</p>
 								</div>
 
 								<div class="flex flex-col gap-2">
-									<span class="text-gray-11 text-sm">Font Color</span>
+									<span class="text-gray-11 text-sm">
+										{t("editor.captions.fontColor")}
+									</span>
 									<RgbInput
 										value={getSetting("color")}
 										onChange={(value) => updateCaptionSetting("color", value)}
@@ -699,10 +833,15 @@ export function CaptionsTab() {
 							</div>
 						</Field>
 
-						<Field name="Background Settings" icon={<IconCapMessageBubble />}>
+						<Field
+							name={t("editor.captions.backgroundSettings")}
+							icon={<IconCapMessageBubble />}
+						>
 							<div class="space-y-3">
 								<div class="flex flex-col gap-2">
-									<span class="text-gray-11 text-sm">Background Color</span>
+									<span class="text-gray-11 text-sm">
+										{t("editor.captions.backgroundColor")}
+									</span>
 									<RgbInput
 										value={getSetting("backgroundColor")}
 										onChange={(value) =>
@@ -712,7 +851,9 @@ export function CaptionsTab() {
 								</div>
 
 								<div class="flex flex-col gap-2">
-									<span class="text-gray-11 text-sm">Background Opacity</span>
+									<span class="text-gray-11 text-sm">
+										{t("editor.captions.backgroundOpacity")}
+									</span>
 									<Slider
 										value={[getSetting("backgroundOpacity")]}
 										onChange={(v) =>
@@ -727,7 +868,10 @@ export function CaptionsTab() {
 							</div>
 						</Field>
 
-						<Field name="Position" icon={<IconCapMessageBubble />}>
+						<Field
+							name={t("editor.captions.position")}
+							icon={<IconCapMessageBubble />}
+						>
 							<KSelect<string>
 								options={POSITION_OPTIONS.map((p) => p.value)}
 								value={getSetting("position")}
@@ -780,10 +924,15 @@ export function CaptionsTab() {
 							</KSelect>
 						</Field>
 
-						<Field name="Animation" icon={<IconCapMessageBubble />}>
+						<Field
+							name={t("editor.captions.animation")}
+							icon={<IconCapMessageBubble />}
+						>
 							<div class="space-y-3">
 								<div class="flex flex-col gap-2">
-									<span class="text-gray-11 text-sm">Highlight Color</span>
+									<span class="text-gray-11 text-sm">
+										{t("editor.captions.highlightColor")}
+									</span>
 									<RgbInput
 										value={getSetting("highlightColor")}
 										onChange={(value) =>
@@ -792,7 +941,9 @@ export function CaptionsTab() {
 									/>
 								</div>
 								<div class="flex flex-col gap-2">
-									<span class="text-gray-11 text-sm">Fade Duration</span>
+									<span class="text-gray-11 text-sm">
+										{t("editor.captions.fadeDuration")}
+									</span>
 									<Slider
 										value={[getSetting("fadeDuration") * 100]}
 										onChange={(v) =>
@@ -810,17 +961,35 @@ export function CaptionsTab() {
 							</div>
 						</Field>
 
-						<Field name="Font Weight" icon={<IconCapMessageBubble />}>
+						<Field
+							name={t("editor.captions.fontWeight")}
+							icon={<IconCapMessageBubble />}
+						>
 							<KSelect
 								options={[
-									{ label: "Normal", value: 400 },
-									{ label: "Medium", value: 500 },
-									{ label: "Bold", value: 700 },
+									{
+										get label() {
+											return t("editor.captions.normal");
+										},
+										value: 400,
+									},
+									{
+										get label() {
+											return t("editor.captions.medium");
+										},
+										value: 500,
+									},
+									{
+										get label() {
+											return t("editor.captions.bold");
+										},
+										value: 700,
+									},
 								]}
 								optionValue="value"
 								optionTextValue="label"
 								value={{
-									label: "Custom",
+									label: t("editor.captions.fontWeights.custom"),
 									value: getSetting("fontWeight"),
 								}}
 								onChange={(value) => {
@@ -851,12 +1020,28 @@ export function CaptionsTab() {
 											const selected = state.selectedOption();
 											if (selected) return selected.label;
 											const weight = getSetting("fontWeight");
-											const option = [
-												{ label: "Normal", value: 400 },
-												{ label: "Medium", value: 500 },
-												{ label: "Bold", value: 700 },
-											].find((o) => o.value === weight);
-											return option ? option.label : "Bold";
+											const options = [
+												{
+													get label() {
+														return t("editor.captions.normal");
+													},
+													value: 400,
+												},
+												{
+													get label() {
+														return t("editor.captions.medium");
+													},
+													value: 500,
+												},
+												{
+													get label() {
+														return t("editor.captions.bold");
+													},
+													value: 700,
+												},
+											];
+											const option = options.find((o) => o.value === weight);
+											return option ? option.label : t("editor.captions.bold");
 										}}
 									</KSelect.Value>
 									<KSelect.Icon>
@@ -877,8 +1062,11 @@ export function CaptionsTab() {
 							</KSelect>
 						</Field>
 
-						<Field name="Export Options" icon={<IconCapMessageBubble />}>
-							<Subfield name="Export with Subtitles">
+						<Field
+							name={t("editor.captions.exportOptions")}
+							icon={<IconCapMessageBubble />}
+						>
+							<Subfield name={t("editor.captions.exportWithSubtitles")}>
 								<Toggle
 									checked={getSetting("exportWithSubtitles")}
 									onChange={(checked) =>
@@ -891,14 +1079,17 @@ export function CaptionsTab() {
 					</div>
 
 					<Show when={hasCaptions()}>
-						<Field name="Caption Segments" icon={<IconCapMessageBubble />}>
+						<Field
+							name={t("editor.captions.segments")}
+							icon={<IconCapMessageBubble />}
+						>
 							<div class="space-y-4">
 								<div class="flex items-center justify-between">
 									<Button
 										onClick={() => addSegment(editorState.playbackTime)}
 										class="w-full"
 									>
-										Add at Current Time
+										{t("editor.captions.addAtCurrentTime")}
 									</Button>
 								</div>
 
@@ -910,7 +1101,7 @@ export function CaptionsTab() {
 													<div class="flex space-x-4">
 														<div class="flex-1">
 															<label class="text-xs text-gray-11">
-																Start Time
+																{t("editor.captions.startTime")}
 															</label>
 															<Input
 																type="number"
@@ -927,7 +1118,7 @@ export function CaptionsTab() {
 														</div>
 														<div class="flex-1">
 															<label class="text-xs text-gray-11">
-																End Time
+																{t("editor.captions.endTime")}
 															</label>
 															<Input
 																type="number"
@@ -946,7 +1137,7 @@ export function CaptionsTab() {
 
 													<div class="space-y-2">
 														<label class="text-xs text-gray-11">
-															Caption Text
+															{t("editor.captions.text")}
 														</label>
 														<div class="w-full px-3 py-2 bg-gray-2 border border-gray-3 rounded-lg text-sm focus-within:border-blue-9 focus-within:ring-1 focus-within:ring-blue-9 transition-colors">
 															<textarea
@@ -970,7 +1161,7 @@ export function CaptionsTab() {
 															class="text-gray-11 inline-flex items-center gap-1.5"
 														>
 															<IconDelete />
-															Delete
+															{t("screenshotEditor.header.delete")}
 														</Button>
 													</div>
 												</div>

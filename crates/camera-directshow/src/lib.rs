@@ -997,11 +997,11 @@ impl IMemInputPin_Impl for SinkInputPin_Impl {
         };
 
         unsafe {
-            if let Ok(new_media_type) = psample.GetMediaType()
-                && !new_media_type.is_null()
-            {
-                self.current_media_type
-                    .replace(AMMediaType::new(&*new_media_type));
+            if let Ok(new_media_type) = psample.GetMediaType() {
+                if !new_media_type.is_null() {
+                    self.current_media_type
+                        .replace(AMMediaType::new(&*new_media_type));
+                }
             }
         }
 

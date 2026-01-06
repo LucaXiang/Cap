@@ -248,25 +248,25 @@ fn load_all_previous_items(app: &AppHandle, load_thumbnails: bool) -> Vec<Cached
     let screenshots_dir = screenshots_path(app);
 
     let recordings_dir = recordings_path(app);
-    if recordings_dir.exists()
-        && let Ok(entries) = std::fs::read_dir(&recordings_dir)
-    {
-        for entry in entries.flatten() {
-            if let Some(item) = load_single_item(&entry.path(), &screenshots_dir, load_thumbnails) {
-                items.push(item);
+    if recordings_dir.exists() {
+        if let Ok(entries) = std::fs::read_dir(&recordings_dir) {
+            for entry in entries.flatten() {
+                if let Some(item) = load_single_item(&entry.path(), &screenshots_dir, load_thumbnails) {
+                    items.push(item);
+                }
             }
         }
     }
 
-    if screenshots_dir.exists()
-        && let Ok(entries) = std::fs::read_dir(&screenshots_dir)
-    {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().and_then(|s| s.to_str()) == Some("cap")
-                && let Some(item) = load_single_item(&path, &screenshots_dir, load_thumbnails)
-            {
-                items.push(item);
+    if screenshots_dir.exists() {
+        if let Ok(entries) = std::fs::read_dir(&screenshots_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.extension().and_then(|s| s.to_str()) == Some("cap") {
+                    if let Some(item) = load_single_item(&path, &screenshots_dir, load_thumbnails) {
+                        items.push(item);
+                    }
+                }
             }
         }
     }

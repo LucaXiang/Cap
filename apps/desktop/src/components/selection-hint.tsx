@@ -1,5 +1,6 @@
 import { type as ostype } from "@tauri-apps/plugin-os";
 import { Match, Show, Switch } from "solid-js";
+import { t } from "~/components/I18nProvider";
 
 export type SelectionHintProps = {
 	show: boolean;
@@ -13,9 +14,8 @@ export default function SelectionHint(props: SelectionHintProps) {
 	return (
 		<Show when={props.show}>
 			<div
-				class={`pointer-events-none absolute inset-0 z-40 flex items-center justify-center px-4 ${
-					props.class ?? ""
-				}`}
+				class={`pointer-events-none absolute inset-0 z-40 flex items-center justify-center px-4 ${props.class ?? ""
+					}`}
 			>
 				<div class="flex flex-col items-center gap-5 text-center text-white drop-shadow-md">
 					<div
@@ -38,7 +38,7 @@ export default function SelectionHint(props: SelectionHintProps) {
 						</div>
 					</div>
 					<p class="text-base font-medium max-w-xs">
-						{props.message ?? "Click and drag to select an area"}
+						{props.message ?? t('targetSelect.hint')}
 					</p>
 				</div>
 			</div>
