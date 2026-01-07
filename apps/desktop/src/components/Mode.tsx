@@ -34,7 +34,7 @@ const Mode = (props: ModeProps) => {
 			{!isInfoHovered() && (
 				<Tooltip
 					placement="top"
-					content="Instant mode"
+					content="即时模式"
 					openDelay={0}
 					closeDelay={0}
 				>
@@ -57,7 +57,7 @@ const Mode = (props: ModeProps) => {
 			{!isInfoHovered() && (
 				<Tooltip
 					placement="top"
-					content="Studio mode"
+					content="工作室模式"
 					openDelay={0}
 					closeDelay={0}
 				>
@@ -80,7 +80,7 @@ const Mode = (props: ModeProps) => {
 			{!isInfoHovered() && (
 				<Tooltip
 					placement="top"
-					content="Screenshot mode"
+					content="截图模式"
 					openDelay={0}
 					closeDelay={0}
 				>

@@ -396,9 +396,8 @@ impl H264Encoder {
             unsafe { transform.SetInputType(input_stream_id, &input_type, 0) }
                 .map_err(NewVideoEncoderError::InputType)?;
         } else {
-            return Err(NewVideoEncoderError::InputType(Error::new(
+            return Err(NewVideoEncoderError::InputType(Error::from(
                 MF_E_TRANSFORM_TYPE_NOT_SET,
-                "No suitable input type found! Try a different set of encoding settings.",
             )));
         }
 

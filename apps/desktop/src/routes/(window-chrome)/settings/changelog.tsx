@@ -4,9 +4,9 @@ import alipayImg from "../../../assets/alipay.jpg";
 
 export default function Page() {
 	return (
-		<div class="flex flex-col h-full">
-			<div class="relative flex-1 custom-scroll">
-				<div class="flex flex-col p-6 gap-4">
+		<div class="flex flex-col h-full items-center">
+			<div class="relative flex-1 custom-scroll w-full">
+				<div class="flex flex-col p-6 gap-4" style={{ "max-width": "600px", "margin": "0 auto" }}>
 					{/* 标题区域 */}
 					<div class="text-center pb-4 border-b border-gray-3">
 						<h2 class="text-xl font-semibold text-gray-12 mb-2">
@@ -18,14 +18,14 @@ export default function Page() {
 					</div>
 					
 					{/* 收款码区域 */}
-					<div class="flex flex-row gap-8 justify-center items-start py-6">
+					<div class="flex flex-row gap-6 justify-center items-start py-6">
 						{/* 微信支付 */}
 						<div class="flex flex-col items-center">
 							<div class="p-3 bg-[#07C160]/10 rounded-2xl mb-3">
 								<img 
 									src={wechatPayImg} 
 									alt="微信支付" 
-									class="w-48 h-48 object-contain rounded-lg"
+									class="w-44 h-44 object-contain rounded-lg"
 								/>
 							</div>
 							<div class="flex items-center gap-2">
@@ -44,7 +44,7 @@ export default function Page() {
 								<img 
 									src={alipayImg} 
 									alt="支付宝" 
-									class="w-48 h-48 object-contain rounded-lg"
+									class="w-44 h-44 object-contain rounded-lg"
 								/>
 							</div>
 							<div class="flex items-center gap-2">

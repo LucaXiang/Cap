@@ -366,7 +366,7 @@ fn build_tray_menu(app: &AppHandle, cache: &PreviousItemsCache) -> tauri::Result
                 &MenuItem::with_id(
                     app,
                     TrayItem::RequestPermissions,
-                    "Request Permissions",
+                    "请求权限",
                     true,
                     None::<&str>,
                 )?,
@@ -378,7 +378,7 @@ fn build_tray_menu(app: &AppHandle, cache: &PreviousItemsCache) -> tauri::Result
                     false,
                     None::<&str>,
                 )?,
-                &MenuItem::with_id(app, TrayItem::Quit, "Quit Cap", true, None::<&str>)?,
+                &MenuItem::with_id(app, TrayItem::Quit, "退出 Cap", true, None::<&str>)?,
             ],
         );
     }
@@ -392,25 +392,25 @@ fn build_tray_menu(app: &AppHandle, cache: &PreviousItemsCache) -> tauri::Result
             &MenuItem::with_id(
                 app,
                 TrayItem::OpenCap,
-                "Open Main Window",
+                "打开主窗口",
                 true,
                 None::<&str>,
             )?,
             &MenuItem::with_id(
                 app,
                 TrayItem::RecordDisplay,
-                "Record Display",
+                "录制屏幕",
                 true,
                 None::<&str>,
             )?,
             &MenuItem::with_id(
                 app,
                 TrayItem::RecordWindow,
-                "Record Window",
+                "录制窗口",
                 true,
                 None::<&str>,
             )?,
-            &MenuItem::with_id(app, TrayItem::RecordArea, "Record Area", true, None::<&str>)?,
+            &MenuItem::with_id(app, TrayItem::RecordArea, "录制区域", true, None::<&str>)?,
             &PredefinedMenuItem::separator(app)?,
             &mode_submenu,
             &previous_submenu,
@@ -418,20 +418,20 @@ fn build_tray_menu(app: &AppHandle, cache: &PreviousItemsCache) -> tauri::Result
             &MenuItem::with_id(
                 app,
                 TrayItem::ViewAllRecordings,
-                "View all recordings",
+                "查看所有录制",
                 true,
                 None::<&str>,
             )?,
             &MenuItem::with_id(
                 app,
                 TrayItem::ViewAllScreenshots,
-                "View all screenshots",
+                "查看所有截图",
                 true,
                 None::<&str>,
             )?,
-            &MenuItem::with_id(app, TrayItem::OpenSettings, "Settings", true, None::<&str>)?,
+            &MenuItem::with_id(app, TrayItem::OpenSettings, "设置", true, None::<&str>)?,
             &PredefinedMenuItem::separator(app)?,
-            &MenuItem::with_id(app, TrayItem::UploadLogs, "Upload Logs", true, None::<&str>)?,
+            &MenuItem::with_id(app, TrayItem::UploadLogs, "上传日志", true, None::<&str>)?,
             &MenuItem::with_id(
                 app,
                 "version",
@@ -439,7 +439,7 @@ fn build_tray_menu(app: &AppHandle, cache: &PreviousItemsCache) -> tauri::Result
                 false,
                 None::<&str>,
             )?,
-            &MenuItem::with_id(app, TrayItem::Quit, "Quit Cap", true, None::<&str>)?,
+            &MenuItem::with_id(app, TrayItem::Quit, "退出 Cap", true, None::<&str>)?,
         ],
     )
 }

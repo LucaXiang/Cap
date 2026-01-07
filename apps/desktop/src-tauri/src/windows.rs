@@ -43,6 +43,7 @@ pub enum CapWindowId {
     Settings,
     Editor { id: u32 },
     RecordingsOverlay,
+    InstantPreview,  // 中文版：即时模式预览窗口
     WindowCaptureOccluder { screen_id: DisplayId },
     TargetSelectOverlay { display_id: DisplayId },
     CaptureArea,
@@ -67,6 +68,7 @@ impl FromStr for CapWindowId {
             // legacy identifier
             "in-progress-recording" => Self::RecordingControls,
             "recordings-overlay" => Self::RecordingsOverlay,
+            "instant-preview" => Self::InstantPreview,  // 中文版：即时模式预览窗口
             "upgrade" => Self::Upgrade,
             "mode-select" => Self::ModeSelect,
             "debug" => Self::Debug,
@@ -115,6 +117,7 @@ impl std::fmt::Display for CapWindowId {
             }
             Self::RecordingControls => write!(f, "in-progress-recording"), // legacy identifier
             Self::RecordingsOverlay => write!(f, "recordings-overlay"),
+            Self::InstantPreview => write!(f, "instant-preview"),  // 中文版：即时模式预览窗口
             Self::Upgrade => write!(f, "upgrade"),
             Self::ModeSelect => write!(f, "mode-select"),
             Self::Editor { id } => write!(f, "editor-{id}"),
@@ -141,6 +144,7 @@ impl CapWindowId {
             Self::ModeSelect => "Cap Mode Selection".to_string(),
             Self::Camera => "Cap Camera".to_string(),
             Self::RecordingsOverlay => "Cap Recordings Overlay".to_string(),
+            Self::InstantPreview => "即时录制预览".to_string(),  // 中文版：即时模式预览窗口
             _ => "Cap".to_string(),
         }
     }
@@ -155,6 +159,7 @@ impl CapWindowId {
                 | Self::Settings
                 | Self::Upgrade
                 | Self::ModeSelect
+                | Self::InstantPreview  // 中文版：即时模式预览窗口
         )
     }
 
@@ -189,6 +194,7 @@ impl CapWindowId {
             Self::Camera => (200.0, 200.0),
             Self::Upgrade => (950.0, 850.0),
             Self::ModeSelect => (580.0, 340.0),
+            Self::InstantPreview => (1000.0, 650.0),  // 中文版：即时模式预览窗口
             _ => return None,
         })
     }
@@ -224,6 +230,10 @@ pub enum ShowCapWindow {
     ModeSelect,
     ScreenshotEditor {
         path: PathBuf,
+    },
+    // 中文版：即时模式预览窗口
+    InstantPreview {
+        project_path: PathBuf,
     },
 }
 
@@ -934,7 +944,45 @@ impl ShowCapWindow {
                     .ok();
                 }
 
+                // 中文版：Windows 平台需要显式调用 show() 显示窗口
+                #[cfg(windows)]
+                {
+                    window.show().ok();
+                }
+
                 fake_window::spawn_fake_window_listener(app.clone(), window.clone());
+
+                window
+            }
+            // 中文版：即时模式预览窗口
+            Self::InstantPreview { project_path } => {
+                let title = CapWindowId::InstantPreview.title();
+                let should_protect = should_protect_window(app, &title);
+
+                let window = self
+                    .window_builder(app, "/instant-preview")
+                    .resizable(true)
+                    .maximizable(true)
+                    .center()
+                    .focused(true)
+                    .content_protected(should_protect)
+                    .initialization_script(format!(
+                        "window.__CAP_INSTANT_PROJECT_PATH__ = {:?};",
+                        project_path.to_string_lossy()
+                    ))
+                    .build()?;
+
+                #[cfg(windows)]
+                {
+                    use tauri::LogicalSize;
+                    if let Err(e) = window.set_size(LogicalSize::new(1000.0, 650.0)) {
+                        warn!("Failed to set InstantPreview window size on Windows: {}", e);
+                    }
+                    if let Err(e) = window.center() {
+                        warn!("Failed to center InstantPreview window on Windows: {}", e);
+                    }
+                    window.show().ok();
+                }
 
                 window
             }
@@ -1012,6 +1060,7 @@ impl ShowCapWindow {
                 CapWindowId::Editor { id }
             }
             ShowCapWindow::RecordingsOverlay => CapWindowId::RecordingsOverlay,
+            ShowCapWindow::InstantPreview { .. } => CapWindowId::InstantPreview,  // 中文版
             ShowCapWindow::TargetSelectOverlay { display_id } => CapWindowId::TargetSelectOverlay {
                 display_id: display_id.clone(),
             },

@@ -72,6 +72,7 @@ const TargetSelectOverlayPage = lazy(
 const WindowCaptureOccluderPage = lazy(
 	() => import("./routes/window-capture-occluder"),
 );
+const InstantPreviewPage = lazy(() => import("./routes/instant-preview"));
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -205,6 +206,7 @@ function Inner() {
 						path="/window-capture-occluder"
 						component={WindowCaptureOccluderPage}
 					/>
+					<Route path="/instant-preview" component={InstantPreviewPage} />
 				</Router>
 			</CapErrorBoundary>
 		</>

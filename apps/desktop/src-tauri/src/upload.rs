@@ -333,6 +333,16 @@ pub struct InstantMultipartUpload {
 }
 
 impl InstantMultipartUpload {
+    /// 中文版：创建一个空的上传任务（用于未登录用户）
+    pub fn spawn_dummy() -> Self {
+        Self {
+            handle: spawn_actor(async move {
+                // 不做任何上传，直接返回成功
+                Ok(())
+            }),
+        }
+    }
+
     /// starts a progressive (multipart) upload that runs until recording stops
     /// and the file has stabilized (no additional data is being written).
     pub fn spawn(

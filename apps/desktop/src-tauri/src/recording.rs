@@ -81,7 +81,7 @@ pub enum InProgressRecording {
     Instant {
         handle: instant_recording::ActorHandle,
         progressive_upload: InstantMultipartUpload,
-        video_upload_info: VideoUploadInfo,
+        video_upload_info: Option<VideoUploadInfo>,  // 中文版：改为 Option 以支持未登录用户
         common: InProgressRecordingCommon,
         camera_feed: Option<Arc<CameraFeedLock>>,
     },
@@ -258,7 +258,7 @@ pub enum CompletedRecording {
         recording: instant_recording::CompletedRecording,
         target_name: String,
         progressive_upload: InstantMultipartUpload,
-        video_upload_info: VideoUploadInfo,
+        video_upload_info: Option<VideoUploadInfo>,  // 中文版：改为 Option 以支持未登录用户
     },
     Studio {
         recording: studio_recording::CompletedRecording,
@@ -532,11 +532,8 @@ pub async fn start_recording(
                         config: s3_config,
                     })
                 }
-                // Allow the recording to proceed without error for any signed-in user
-                _ => {
-                    // User is not signed in
-                    return Err("Please sign in to use instant recording".to_string());
-                }
+                // 中文版：允许未登录用户使用即时模式（本地录制）
+                _ => None,
             }
         }
         RecordingMode::Studio => None,
@@ -778,9 +775,8 @@ pub async fn start_recording(
                             })
                         }
                         RecordingMode::Instant => {
-                            let Some(video_upload_info) = video_upload_info.clone() else {
-                                return Err(anyhow!("Video upload info not found"));
-                            };
+                            // 中文版：允许未登录用户使用即时模式（本地录制，不上传）
+                            let video_upload_info_opt = video_upload_info.clone();
 
                             let mut builder = instant_recording::Actor::builder(
                                 recording_dir.clone(),
@@ -814,18 +810,24 @@ pub async fn start_recording(
                                     e
                                 })?;
 
-                            let progressive_upload = InstantMultipartUpload::spawn(
-                                app_handle.clone(),
-                                recording_dir.join("content/output.mp4"),
-                                video_upload_info.clone(),
-                                recording_dir.clone(),
-                                Some(finish_upload_rx.clone()),
-                            );
+                            // 只有在有上传信息时才启动上传
+                            let progressive_upload = if let Some(ref upload_info) = video_upload_info_opt {
+                                InstantMultipartUpload::spawn(
+                                    app_handle.clone(),
+                                    recording_dir.join("content/output.mp4"),
+                                    upload_info.clone(),
+                                    recording_dir.clone(),
+                                    Some(finish_upload_rx.clone()),
+                                )
+                            } else {
+                                // 未登录时不上传，创建一个空的上传任务
+                                InstantMultipartUpload::spawn_dummy()
+                            };
 
                             Ok(InProgressRecording::Instant {
                                 handle,
                                 progressive_upload,
-                                video_upload_info,
+                                video_upload_info: video_upload_info_opt,
                                 common: common.clone(),
                                 camera_feed: camera_feed.clone(),
                             })
@@ -1108,13 +1110,18 @@ pub async fn delete_recording(app: AppHandle, state: MutableState<'_, App>) -> R
                 progressive_upload,
                 ..
             } => {
-                debug!(
-                    "User deleted recording. Aborting multipart upload for {:?}",
-                    video_upload_info.id
-                );
-                progressive_upload.handle.abort();
-
-                Some(video_upload_info.id.clone())
+                // 中文版：只有在有上传信息时才中止上传
+                if let Some(upload_info) = video_upload_info {
+                    debug!(
+                        "User deleted recording. Aborting multipart upload for {:?}",
+                        upload_info.id
+                    );
+                    progressive_upload.handle.abort();
+                    Some(upload_info.id.clone())
+                } else {
+                    progressive_upload.handle.abort();
+                    None
+                }
             }
             _ => None,
         };
@@ -1543,101 +1550,118 @@ async fn handle_recording_finish(
                 None,
             ));
 
-            let _ = open_external_link(app.clone(), video_upload_info.link.clone());
+            // 中文版：只有在有上传信息时才打开链接和上传
+            if let Some(ref upload_info) = video_upload_info {
+                let _ = open_external_link(app.clone(), upload_info.link.clone());
 
-            spawn_actor({
-                let video_upload_info = video_upload_info.clone();
-                let recording_dir = recording_dir.clone();
+                spawn_actor({
+                    let video_upload_info = upload_info.clone();
+                    let recording_dir = recording_dir.clone();
 
-                async move {
-                    let video_upload_succeeded = match progressive_upload
-                        .handle
-                        .await
-                        .map_err(|e| e.to_string())
-                        .and_then(|r| r.map_err(|v| v.to_string()))
-                    {
-                        Ok(()) => {
-                            info!(
-                                "Not attempting instant recording upload as progressive upload succeeded"
-                            );
-                            true
-                        }
-                        Err(e) => {
-                            error!("Progressive upload failed: {}", e);
-                            false
-                        }
-                    };
+                    async move {
+                        let video_upload_succeeded = match progressive_upload
+                            .handle
+                            .await
+                            .map_err(|e| e.to_string())
+                            .and_then(|r| r.map_err(|v| v.to_string()))
+                        {
+                            Ok(()) => {
+                                info!(
+                                    "Not attempting instant recording upload as progressive upload succeeded"
+                                );
+                                true
+                            }
+                            Err(e) => {
+                                error!("Progressive upload failed: {}", e);
+                                false
+                            }
+                        };
 
-                    let _ = screenshot_task.await;
+                        let _ = screenshot_task.await;
 
-                    if video_upload_succeeded {
-                        if let Ok(bytes) =
-                            compress_image(display_screenshot).await
-                            .map_err(|err|
-                                error!("Error compressing thumbnail for instant mode progressive upload: {err}")
-                            ) {
-                                let res = crate::upload::singlepart_uploader(
-                                    app.clone(),
-                                    crate::api::PresignedS3PutRequest {
-                                        video_id: video_upload_info.id.clone(),
-                                        subpath: "screenshot/screen-capture.jpg".to_string(),
-                                        method: PresignedS3PutRequestMethod::Put,
-                                        meta: None,
-                                    },
-                                    bytes.len() as u64,
-                                    stream::once(async move { Ok::<_, std::io::Error>(bytes::Bytes::from(bytes)) }),
-                                )
-                                .await;
-                                if let Err(err) = res {
-	                                error!("Error updating thumbnail for instant mode progressive upload: {err}");
-	                                return;
+                        if video_upload_succeeded {
+                            if let Ok(bytes) =
+                                compress_image(display_screenshot).await
+                                .map_err(|err|
+                                    error!("Error compressing thumbnail for instant mode progressive upload: {err}")
+                                ) {
+                                    let res = crate::upload::singlepart_uploader(
+                                        app.clone(),
+                                        crate::api::PresignedS3PutRequest {
+                                            video_id: video_upload_info.id.clone(),
+                                            subpath: "screenshot/screen-capture.jpg".to_string(),
+                                            method: PresignedS3PutRequestMethod::Put,
+                                            meta: None,
+                                        },
+                                        bytes.len() as u64,
+                                        stream::once(async move { Ok::<_, std::io::Error>(bytes::Bytes::from(bytes)) }),
+                                    )
+                                    .await;
+                                    if let Err(err) = res {
+                                        error!("Error updating thumbnail for instant mode progressive upload: {err}");
+                                        return;
+                                    }
+
+                                    if GeneralSettingsStore::get(&app).ok().flatten().unwrap_or_default().delete_instant_recordings_after_upload {
+                                            if let Err(err) = tokio::fs::remove_dir_all(&recording_dir).await {
+                                                error!("Failed to remove recording files after upload: {err:?}");
+                                            }
+                                        }
+
                                 }
+                        } else if let Ok(meta) = build_video_meta(&output_path)
+                            .map_err(|err| error!("Error getting video metadata: {}", err))
+                        {
+                            // The upload_video function handles screenshot upload, so we can pass it along
+                            upload_video(
+                                &app,
+                                video_upload_info.id.clone(),
+                                output_path,
+                                display_screenshot.clone(),
+                                meta,
+                                None,
+                            )
+                            .await
+                            .map(|_| info!("Final video upload with screenshot completed successfully"))
+                            .map_err(|error| {
+                                error!("Error in upload_video: {error}");
 
-                                if GeneralSettingsStore::get(&app).ok().flatten().unwrap_or_default().delete_instant_recordings_after_upload {
-	                                	if let Err(err) = tokio::fs::remove_dir_all(&recording_dir).await {
-	                                		error!("Failed to remove recording files after upload: {err:?}");
-	                                	}
-	                                }
-
-                            }
-                    } else if let Ok(meta) = build_video_meta(&output_path)
-                        .map_err(|err| error!("Error getting video metadata: {}", err))
-                    {
-                        // The upload_video function handles screenshot upload, so we can pass it along
-                        upload_video(
-                            &app,
-                            video_upload_info.id.clone(),
-                            output_path,
-                            display_screenshot.clone(),
-                            meta,
-                            None,
-                        )
-                        .await
-                        .map(|_| info!("Final video upload with screenshot completed successfully"))
-                        .map_err(|error| {
-                            error!("Error in upload_video: {error}");
-
-                            if let Ok(mut meta) = RecordingMeta::load_for_project(&recording_dir) {
-                                meta.upload = Some(UploadMeta::Failed {
-                                    error: error.to_string(),
-                                });
-                                meta.save_for_project()
-                                    .map_err(|e| format!("Failed to save recording meta: {e}"))
-                                    .ok();
-                            }
-                        })
-                        .ok();
+                                if let Ok(mut meta) = RecordingMeta::load_for_project(&recording_dir) {
+                                    meta.upload = Some(UploadMeta::Failed {
+                                        error: error.to_string(),
+                                    });
+                                    meta.save_for_project()
+                                        .map_err(|e| format!("Failed to save recording meta: {e}"))
+                                        .ok();
+                                }
+                            })
+                            .ok();
+                        }
                     }
-                }
-            });
+                });
 
-            (
-                RecordingMetaInner::Instant(recording.meta),
-                Some(SharingMeta {
-                    link: video_upload_info.link,
-                    id: video_upload_info.id,
-                }),
-            )
+                (
+                    RecordingMetaInner::Instant(recording.meta),
+                    Some(SharingMeta {
+                        link: upload_info.link.clone(),
+                        id: upload_info.id.clone(),
+                    }),
+                )
+            } else {
+                // 中文版：未登录用户，不上传，直接保存本地
+                let _ = screenshot_task.await;
+                progressive_upload.handle.abort();
+                
+                // 中文版：录制完成后打开即时模式预览窗口
+                let _ = ShowCapWindow::InstantPreview { 
+                    project_path: recording_dir.clone() 
+                }.show(&app).await;
+                
+                (
+                    RecordingMetaInner::Instant(recording.meta),
+                    None,
+                )
+            }
         }
     };
 
