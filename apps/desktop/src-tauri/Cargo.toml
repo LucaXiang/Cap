@@ -3,7 +3,7 @@ name = "cap-desktop"
 version = "0.4.0-cn"
 description = "Beautiful screen recordings, owned by you."
 authors = ["you"]
-edition = "2021"
+edition = "2024"
 
 [lints]
 workspace = true
