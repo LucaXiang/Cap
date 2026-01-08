@@ -1,19 +1,20 @@
 use super::*;
 use crate::{
-    ChannelAudioSourceConfig,
     output_pipeline::{
         self, AudioFrame, ChannelAudioSource, ChannelVideoSource, ChannelVideoSourceConfig,
         SetupCtx,
     },
+    ChannelAudioSourceConfig,
 };
-use anyhow::{Context, anyhow};
+use anyhow::{anyhow, Context};
 use cap_timestamp::Timestamp;
 use cidre::*;
-use futures::{FutureExt as _, channel::mpsc, future::BoxFuture};
+use futures::Future;
+use futures::{channel::mpsc, future::BoxFuture, FutureExt as _};
 use std::{
     sync::{
-        Arc,
         atomic::{self, AtomicBool, AtomicU32, AtomicU64},
+        Arc,
     },
     time::Duration,
 };
@@ -23,7 +24,6 @@ use tokio_util::{
     sync::{CancellationToken, DropGuard},
 };
 use tracing::{debug, warn};
-
 fn get_screen_buffer_size() -> usize {
     std::env::var("CAP_SCREEN_BUFFER_SIZE")
         .ok()
